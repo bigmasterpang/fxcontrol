@@ -1,0 +1,3402 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>斐讯设备云端管理平台 · FX Hub</title>
+  <style>
+    :root {
+      --bg: #edf3eb;
+      --card: #fffdf6;
+      --ink: #223126;
+      --muted: #6b756c;
+      --line: #d8decf;
+      --green: #28755a;
+      --green-2: #1f644c;
+      --orange: #c56a26;
+      --red: #b84a3d;
+      --soil: #7b5b35;
+      --blue: #1d69a6;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      background: radial-gradient(circle at 20% 0, #fff7df 0, #edf4ec 42%, #e8efe4 100%);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .wrap {
+      width: 100%;
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 14px 16px 36px;
+      flex: 1;
+    }
+    .hidden { display: none !important; }
+
+    /* Toast Notification */
+    #toast-box {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+    .toast {
+      background: rgba(34, 49, 38, 0.94);
+      color: white;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: toastIn 0.25s ease-out forwards;
+      pointer-events: auto;
+    }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(-12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Top Bar Header */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 12px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid var(--line);
+      flex-wrap: wrap;
+    }
+    .brand-title {
+      font-size: 20px;
+      margin: 0;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--ink);
+    }
+    .brand-sub {
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 3px;
+    }
+
+    /* Navigation Tabs */
+    .nav-tabs {
+      display: inline-flex;
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 3px;
+      gap: 3px;
+    }
+    .nav-tab-btn {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .nav-tab-btn:hover { color: var(--ink); }
+    .nav-tab-btn.active {
+      background: var(--green);
+      color: white;
+      box-shadow: 0 2px 8px rgba(40, 117, 90, 0.28);
+    }
+    .badge-count {
+      background: #ef4444;
+      color: white;
+      font-size: 10px;
+      font-weight: 800;
+      border-radius: 999px;
+      padding: 1px 6px;
+      line-height: 1.2;
+    }
+
+    /* User Session Tag */
+    .user-tag {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--green-2);
+      background: #e2f0e7;
+      border: 1px solid #b2d8c3;
+      border-radius: 999px;
+      padding: 4px 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      border-radius: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 0;
+      padding: 8px 14px;
+      font-size: 13px;
+      line-height: 1.2;
+      transition: all 0.15s ease;
+      box-shadow: 0 2px 0 rgba(0,0,0,.04);
+      white-space: nowrap;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .btn-green { background: var(--green); color: white; }
+    .btn-green:hover:not(:disabled) { background: var(--green-2); }
+    .btn-secondary { background: #e5eadf; color: var(--ink); box-shadow: none; border: 1px solid var(--line); }
+    .btn-secondary:hover:not(:disabled) { background: #dbe3d4; }
+    .btn-orange { background: var(--orange); color: white; }
+    .btn-red { background: var(--red); color: white; }
+    .btn-small { min-height: 28px; padding: 4px 9px; font-size: 11px; }
+
+    /* Pills */
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border-radius: 999px;
+      padding: 3px 9px;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .pill.ok { background: #dff2e8; color: #207052; }
+    .pill.warn { background: #f5ead1; color: #8a5a18; }
+    .pill.info { background: #e2f0ff; color: #1762a6; }
+    .pill.err { background: #ffe7e2; color: var(--red); }
+
+    .dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #bbb;
+    }
+    .dot.ok { background: #35a66f; }
+    .dot.warn { background: #d49b2a; }
+    .dot.err { background: #dc2626; }
+
+    /* Live pulse dot */
+    .live-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #207052;
+      transition: all 0.2s ease;
+    }
+    .live-dot.pulse {
+      transform: scale(1.6);
+      background: #38a169;
+      box-shadow: 0 0 8px #38a169;
+    }
+
+    /* ========================================================
+       DESKTOP CARDS CONTAINER (2-COLUMN EQUAL HEIGHT GRID)
+       ======================================================== */
+    .cards-container {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      align-items: stretch;
+    }
+    .swipe-slide {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-width: 0;
+    }
+    .card {
+      flex: 1;
+      background: rgba(255, 253, 246, 0.96);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      box-shadow: 0 8px 24px rgba(54, 66, 45, 0.06);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .card-top {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .card-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .card-title h2 {
+      font-size: 16px;
+      margin: 0;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .device-id {
+      font: 11px Consolas, monospace;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* 6-Plug Grid */
+    .plugs-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .plug-btn {
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      padding: 9px 10px;
+      background: #fbf8ee;
+      cursor: pointer;
+      transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 68px;
+      position: relative;
+    }
+    .plug-btn:hover { background: #f5f8f2; }
+    .plug-btn.on {
+      background: linear-gradient(135deg, #eff8f2 0%, #e1f0e7 100%);
+      border-color: #82c2a0;
+      box-shadow: 0 3px 8px rgba(40, 117, 90, 0.12);
+    }
+    .plug-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 4px;
+    }
+    .plug-name {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--ink);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+    }
+    .rename-icon, .timer-icon {
+      font-size: 11px;
+      color: var(--muted);
+      opacity: 0.65;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: all 0.15s;
+      cursor: pointer;
+    }
+    .rename-icon:hover, .timer-icon:hover {
+      opacity: 1;
+      background: rgba(0,0,0,0.06);
+      color: var(--green);
+    }
+
+    /* 4-Metrics Grid for zM1 */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      padding: 9px 10px;
+      background: #fbf8ee;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 72px;
+    }
+    .metric span.label {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .metric strong {
+      font-size: 18px;
+      line-height: 1.2;
+      font-weight: 800;
+      margin-top: 2px;
+      font-family: Consolas, -apple-system, sans-serif;
+    }
+    .metric small.hint {
+      font-size: 10px;
+      margin-top: 3px;
+      font-weight: 700;
+    }
+
+    /* Segmented Controls for M1 Brightness */
+    .seg-group {
+      display: flex;
+      background: #f0ede1;
+      border-radius: 10px;
+      padding: 2px;
+      gap: 2px;
+      border: 1px solid var(--line);
+    }
+    .seg-btn {
+      flex: 1;
+      border: 0;
+      background: transparent;
+      padding: 5px 0;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .seg-btn.active {
+      background: var(--green);
+      color: white;
+      box-shadow: 0 1px 4px rgba(40,117,90,0.25);
+    }
+
+    /* Discovery Candidate Card */
+    .candidate-card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+      transition: all 0.2s ease;
+    }
+    .candidate-card:hover {
+      border-color: var(--green);
+      box-shadow: 0 6px 18px rgba(40, 117, 90, 0.1);
+    }
+
+    /* Mobile Device Tab Bar & Dots */
+    .mobile-tab-bar {
+      display: none;
+      gap: 6px;
+      padding: 6px 0 10px;
+      position: sticky;
+      top: 0;
+      background: rgba(237, 244, 236, 0.96);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 25;
+      width: 100%;
+      overflow-x: auto;
+      scrollbar-width: none;
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
+    }
+    .mobile-tab-bar::-webkit-scrollbar { display: none; }
+
+    .tab-btn {
+      flex: 1 1 0px;
+      min-width: 76px;
+      max-width: 140px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.85);
+      color: var(--muted);
+      border-radius: 12px;
+      padding: 6px 4px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .tab-btn .tab-icon { font-size: 15px; line-height: 1; }
+    .tab-btn .tab-text {
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 90%;
+    }
+    .tab-btn.active {
+      background: var(--green);
+      color: white;
+      border-color: var(--green);
+      box-shadow: 0 2px 8px rgba(40, 117, 90, 0.28);
+    }
+    .tab-btn.active .tab-text { color: white; }
+
+    .dots-indicator {
+      display: none;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 0 12px;
+    }
+    .dot-step {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #c8d3c1;
+      transition: width 0.2s ease, background 0.2s ease;
+    }
+    .dot-step.active {
+      width: 20px;
+      border-radius: 999px;
+      background: var(--green);
+    }
+
+    /* ========================================================
+       MOBILE HORIZONTAL SWIPE CAROUSEL (MAX-WIDTH 768px)
+       ======================================================== */
+    @media (max-width: 768px) {
+      .wrap { padding: 8px 10px 24px; }
+      .top-bar { flex-direction: column; align-items: flex-start; gap: 8px; }
+      
+      .mobile-tab-bar { display: flex; }
+      .dots-indicator { display: flex; }
+
+      .cards-container {
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        gap: 12px;
+        scrollbar-width: none;
+        padding: 2px 0 6px;
+      }
+      .cards-container::-webkit-scrollbar { display: none; }
+
+      .swipe-slide {
+        flex: 0 0 100%;
+        min-width: 100%;
+        scroll-snap-align: center;
+        scroll-snap-stop: always;
+      }
+
+      .metrics-grid { grid-template-columns: repeat(2, 1fr); gap: 7px; }
+      .plugs-grid { grid-template-columns: repeat(2, 1fr); gap: 7px; }
+      .card { padding: 13px; border-radius: 16px; }
+    }
+
+    /* Modal dialog */
+    .modal-mask {
+      position: fixed;
+      inset: 0;
+      background: rgba(20, 28, 22, 0.48);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 60;
+    }
+    .modal {
+      width: min(440px, 100%);
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 24px 80px rgba(24, 30, 20, 0.32);
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 12px;
+    }
+    .field label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+    .field input, .field select {
+      font: inherit;
+      border-radius: 11px;
+      border: 1px solid var(--line);
+      padding: 9px 12px;
+      font-size: 14px;
+      outline: none;
+      background: white;
+    }
+    .field input:focus, .field select:focus {
+      border-color: var(--green);
+    }
+    .tags-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .tag-item {
+      border: 1px solid var(--line);
+      background: white;
+      border-radius: 8px;
+      padding: 4px 9px;
+      font-size: 11px;
+      color: var(--muted);
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+    .tag-item:hover {
+      background: #eaf3ed;
+      color: var(--green);
+      border-color: var(--green);
+    }
+
+    /* Auth screen */
+    .auth-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      gap: 22px;
+      margin: 32px auto;
+      max-width: 980px;
+      width: 100%;
+      flex-wrap: wrap;
+    }
+    .auth-box {
+      flex: 1 1 340px;
+      max-width: 420px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 24px;
+      box-shadow: 0 16px 40px rgba(40, 50, 35, 0.08);
+      display: flex;
+      flex-direction: column;
+    }
+    .auth-guide-card {
+      flex: 1 1 440px;
+      max-width: 530px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 24px;
+      box-shadow: 0 16px 40px rgba(40, 50, 35, 0.08);
+      display: flex;
+      flex-direction: column;
+    }
+    @media (max-width: 768px) {
+      .auth-wrapper {
+        margin: 14px auto;
+        gap: 16px;
+      }
+      .auth-box, .auth-guide-card {
+        max-width: 100%;
+        padding: 18px;
+      }
+    }
+    .auth-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 18px;
+    }
+    .auth-tab {
+      flex: 1;
+      text-align: center;
+      padding: 8px 0;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      color: var(--muted);
+      border-bottom: 2px solid transparent;
+    }
+    .auth-tab.active {
+      color: var(--green);
+      border-bottom-color: var(--green);
+    }
+    .auth-error {
+      background: #feece8;
+      border: 1px solid #f6b5ab;
+      color: #b83223;
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    /* Dedicated Admin View Layout */
+    .admin-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 768px) {
+      .admin-stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    .admin-stat-card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .admin-stat-card span.stat-lbl {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .admin-stat-card strong.stat-num {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--ink);
+      font-family: Consolas, monospace;
+    }
+    .admin-stat-card small.stat-sub {
+      font-size: 11px;
+      color: var(--green);
+      font-weight: 600;
+    }
+
+    .admin-sub-tabs {
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .admin-sub-tab {
+      background: transparent;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .admin-sub-tab.active {
+      background: var(--green);
+      color: white;
+      border-color: var(--green);
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      text-align: left;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+    }
+    .data-table th {
+      background: #f7f5ed;
+      padding: 10px;
+      color: var(--muted);
+      font-weight: 700;
+      border-bottom: 1px solid var(--line);
+    }
+    .data-table td {
+      padding: 9px 10px;
+      border-bottom: 1px solid #f0eee4;
+      vertical-align: middle;
+    }
+    .data-table tr:hover td {
+      background: #fdfbf5;
+    }
+
+    .pagination-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--muted);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Toast Alert Container -->
+<div id="toast-box"></div>
+
+<div class="wrap">
+  <!-- Top Navigation Header -->
+  <header class="top-bar">
+    <div>
+      <h1 class="brand-title"><span>🏡</span>斐讯智能设备云端中枢</h1>
+      <div class="brand-sub">Phicomm Cloud Hub · 独立租户管理 · 局域网智能匹配</div>
+    </div>
+
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+      <!-- Main Views Switcher -->
+      <nav id="top-nav-tabs" class="nav-tabs hidden">
+        <button id="nav-btn-control" class="nav-tab-btn active" onclick="switchView('control')">
+          <span>🎛️</span><span>设备控制</span>
+        </button>
+        <button id="nav-btn-discovery" class="nav-tab-btn" onclick="switchView('discovery')">
+          <span>🔍</span><span>发现新设备</span>
+          <span id="nav-candidate-badge" class="badge-count hidden">0</span>
+        </button>
+        <button id="nav-btn-admin" class="nav-tab-btn hidden" onclick="switchView('admin')">
+          <span>👑</span><span>管理后台</span>
+        </button>
+      </nav>
+
+      <!-- User Badge -->
+      <span id="user-badge" class="user-tag hidden">
+        <span>👤</span><span id="user-name-txt">User</span>
+      </span>
+      <button id="btn-logout" onclick="logoutUser()" class="btn btn-secondary btn-small hidden" style="color:var(--red)">
+        🚪 退出
+      </button>
+    </div>
+  </header>
+
+  <!-- ========================================================
+       VIEW 1: AUTHENTICATION (LOGIN / REGISTER & USER GUIDE)
+       ======================================================== -->
+  <section id="view-auth" class="auth-wrapper">
+    <!-- Left Column: Login / Register Box -->
+    <div class="auth-box">
+      <div class="auth-tabs">
+        <div id="tab-btn-login" class="auth-tab active" onclick="switchAuthTab('login')">账号登录</div>
+        <div id="tab-btn-register" class="auth-tab" onclick="switchAuthTab('register')">新用户注册</div>
+      </div>
+
+      <div id="auth-err-box" class="auth-error hidden"></div>
+
+      <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+        <div class="field">
+          <label>用户名</label>
+          <input id="auth-username" autocomplete="username" placeholder="请输入用户名" required minlength="3">
+        </div>
+        <div class="field">
+          <label>登录密码</label>
+          <input id="auth-password" type="password" autocomplete="current-password" placeholder="请输入密码 (至少6位)" required minlength="6">
+        </div>
+
+        <div id="register-ip-notice" class="hidden" style="font-size:11px; color:var(--muted); margin-bottom:12px; line-height:1.4;">
+          🛡️ 防恶意注册保护：单 IP 限制注册 3 个账号，每次注册间隔需大于 60 秒。
+        </div>
+
+        <div style="margin-top:18px;">
+          <button type="submit" id="auth-submit-btn" class="btn btn-green" style="width:100%; height:40px; font-size:14px;">
+            登 录
+          </button>
+        </div>
+      </form>
+
+      <div style="margin-top:20px; padding-top:14px; border-top:1px dashed var(--line); font-size:11px; color:var(--muted); text-align:center;">
+        🔒 每个用户独立管理自己的绑定设备 · 数据隔离存储
+      </div>
+    </div>
+
+    <!-- Right Column: User Guide & MQTT Setup Instructions -->
+    <div class="auth-guide-card">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--line);">
+        <span style="font-size:22px;">📖</span>
+        <div>
+          <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--ink);">平台使用说明与设备接入指南</h3>
+          <div style="font-size:11px; color:var(--muted); margin-top:2px;">MQTT 服务器参数 · 局域网自发现 · 设备一键认领</div>
+        </div>
+      </div>
+
+      <!-- Firmware Prerequisite Banner (Top Highlight) -->
+      <div style="background:#fff8e6; border:1px solid #f0d59e; border-radius:12px; padding:10px 12px; margin-bottom:12px; display:flex; gap:9px; align-items:flex-start;">
+        <span style="font-size:16px; margin-top:1px;">⚠️</span>
+        <div style="font-size:11px; line-height:1.45; color:#784d08;">
+          <b style="color:#b25e00;">固件前置要求（必须先刷机）：</b>
+          本项目通信协议全面基于开源固件 <a href="https://github.com/a2633063/zTC1" target="_blank" style="color:#207052; font-weight:700; text-decoration:underline;">a2633063/zTC1</a>。TC1 排插与 M1 检测仪<b>必须先刷入该固件（或基于其定制的版本）</b>方可接入本系统；未刷机的原厂官方固件无法通信。
+        </div>
+      </div>
+
+      <!-- MQTT Server Info Card -->
+      <div style="background:#f4f8f3; border:1px solid #cce2d3; border-radius:14px; padding:13px 15px; margin-bottom:14px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+          <span style="font-size:12px; font-weight:800; color:var(--green-2); display:flex; align-items:center; gap:5px;">
+            <span>📡</span><span>MQTT 服务器连接说明</span>
+          </span>
+          <span class="pill ok" style="font-size:10px; padding:2px 7px;">设备接入参数</span>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 78px 1fr; gap:7px 10px; font-size:12px; align-items:center;">
+          <span style="color:var(--muted); font-weight:700;">服务器地址:</span>
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <code id="guide-mqtt-host" style="font-family:monospace; font-weight:800; color:var(--ink); background:white; padding:2px 7px; border-radius:6px; border:1px solid #d5e5db; display:inline-block; word-break:break-all;">--</code>
+            <button type="button" onclick="copyMqttField('guide-mqtt-host', '服务器地址已复制')" class="btn btn-secondary btn-small" style="padding:1px 6px; font-size:11px; height:24px; line-height:22px;" title="复制服务器地址">📋</button>
+            <span id="guide-mqtt-host-hint" class="pill warn hidden" style="font-size:10px; padding:1px 6px;">(域名不符，已切换为服务器 IP)</span>
+          </div>
+
+          <span style="color:var(--muted); font-weight:700;">通信端口:</span>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <code id="guide-mqtt-port" style="font-family:monospace; font-weight:800; color:var(--ink); background:white; padding:2px 7px; border-radius:6px; border:1px solid #d5e5db; display:inline-block;">1883</code>
+            <span style="font-size:11px; color:var(--muted);">(标准 TCP)</span>
+          </div>
+
+          <span style="color:var(--muted); font-weight:700;">认证账号:</span>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <code id="guide-mqtt-user" style="font-family:monospace; font-weight:800; color:var(--green-2); background:white; padding:2px 7px; border-radius:6px; border:1px solid #d5e5db; display:inline-block;">--</code>
+            <button type="button" id="btn-copy-mqtt-user" onclick="copyMqttField('guide-mqtt-user', '认证账号已复制')" class="btn btn-secondary btn-small" style="padding:1px 6px; font-size:11px; height:24px; line-height:22px;" title="复制账号">📋</button>
+          </div>
+
+          <span style="color:var(--muted); font-weight:700;">认证密码:</span>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <code id="guide-mqtt-pass" style="font-family:monospace; font-weight:800; color:var(--soil); background:white; padding:2px 7px; border-radius:6px; border:1px solid #d5e5db; display:inline-block;">--</code>
+            <button type="button" id="btn-copy-mqtt-pass" onclick="copyMqttField('guide-mqtt-pass', '认证密码已复制')" class="btn btn-secondary btn-small" style="padding:1px 6px; font-size:11px; height:24px; line-height:22px;" title="复制密码">📋</button>
+          </div>
+
+          <span style="color:var(--muted); font-weight:700;">设备报文:</span>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <button type="button" onclick="copyUdpPayloadSample()" class="btn btn-secondary btn-small" style="font-size:11px; padding:3px 9px;">
+              📋 复制设备 UDP 配置 JSON
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step by step instructions -->
+      <div style="font-size:12px; line-height:1.5; color:var(--ink); display:flex; flex-direction:column; gap:10px;">
+        <div style="display:flex; gap:9px; align-items:flex-start;">
+          <span style="background:var(--green); color:white; border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; flex-shrink:0; margin-top:2px;">1</span>
+          <div>
+            <b style="color:var(--soil)">设备联网与局域网广播配网一致性</b>
+            <div style="color:var(--muted); font-size:11px; margin-top:2px;">
+              设备刷入基于 zTC1 的固件后，通过配套 UDP 工具向 10182 端口广播配置。<b>注意：配网填入的目标服务器地址必须与上方卡片显示的域名或 IP 严格一致</b>。点击上方【复制设备 UDP 配置 JSON】可直接获得对应配置。
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:9px; align-items:flex-start;">
+          <span style="background:var(--green); color:white; border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; flex-shrink:0; margin-top:2px;">2</span>
+          <div>
+            <b style="color:var(--soil)">账号登录与局域网设备发现</b>
+            <div style="color:var(--muted); font-size:11px; margin-top:2px;">登录您的个人账号。系统将自动探测并匹配当前网络中在线的设备。若名下暂无设备或有新设备上线，点击顶部【🔍 发现新设备】即可查看候选设备列表。</div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:9px; align-items:flex-start;">
+          <span style="background:var(--green); color:white; border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; flex-shrink:0; margin-top:2px;">3</span>
+          <div>
+            <b style="color:var(--soil)">设备一键认领与远程智能控制</b>
+            <div style="color:var(--muted); font-size:11px; margin-top:2px;">核对设备 MAC 地址与型号后点击【认领】即可绑定至账号。支持 6 孔独立通断、自定义命名、硬件离线定时、实时功率/PM2.5 遥测及卡片顺序调序。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================
+       VIEW 2: DEVICE CONTROL & MANAGEMENT
+       ======================================================== -->
+  <section id="view-control" class="hidden">
+    <!-- Action Banner for Adding More Devices -->
+    <div id="control-top-banner" style="display:flex; justify-content:space-between; align-items:center; background:#f4f0e2; border:1px solid var(--line); border-radius:13px; padding:8px 14px; margin-bottom:12px; font-size:12px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span>💡</span>
+        <span id="candidate-alert-txt">发现当前网络有可绑定的新设备</span>
+      </div>
+      <button onclick="switchView('discovery')" class="btn btn-green btn-small">
+        ➕ 发现与认领新设备
+      </button>
+    </div>
+
+    <!-- Mobile Dynamic Tab Bar (Sticky on Phone) -->
+    <nav class="mobile-tab-bar" id="mobile-device-tabs"></nav>
+
+    <!-- Mobile Swipe Indicator Dots -->
+    <div class="dots-indicator" id="dots-indicator"></div>
+
+    <!-- Bound Devices Container (Swipe on Mobile, Grid on Desktop) -->
+    <div class="cards-container" id="bound-cards-container"></div>
+  </section>
+
+  <!-- ========================================================
+       VIEW 3: DISCOVERY & CLAIM DEVICE
+       ======================================================== -->
+  <section id="view-discovery" class="hidden">
+    <!-- Header with Back Button & Bulk Add Button -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+      <div>
+        <h2 style="margin:0; font-size:18px; font-weight:800; display:flex; align-items:center; gap:8px;">
+          <span>🔍</span><span>局域网智能设备发现与认领</span>
+        </h2>
+        <div style="font-size:12px; color:var(--muted); margin-top:3px;">
+          系统根据当前访问公网出口 IP (<b id="disp-client-ip">--</b>)，自动匹配同网络下上报至云端的斐讯硬件
+        </div>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <button onclick="openManualBindModal()" class="btn btn-secondary btn-small">➕ 手动添加 MAC</button>
+        <button onclick="loadDiscoveryData()" class="btn btn-secondary btn-small">🔄 重新检测</button>
+        <button id="btn-bulk-bind" onclick="bindAllDevices()" class="btn btn-green btn-small hidden">
+          ⚡ 一键全部添加 (<span id="bulk-bind-count">0</span>)
+        </button>
+        <button onclick="switchView('control')" class="btn btn-secondary btn-small">
+          ← 进入设备控制台 (<span id="back-bound-count">0</span>)
+        </button>
+      </div>
+    </div>
+
+    <!-- Zero Device Welcome Hint -->
+    <div id="zero-device-hint" class="hidden" style="background:#eaf4ed; border:1px solid #b8dcbe; border-radius:13px; padding:12px 16px; margin-bottom:16px; font-size:13px; color:#1f644c;">
+      👋 <b>欢迎使用！</b> 检测到您名下暂无已绑定设备。请在下方找到您家中的智能排插或空气检测仪，点击 <b>「立即绑定」</b>。设备将停留在本页供您确认，绑定完成后可随时点击右上角返回控制台。
+    </div>
+
+    <!-- Candidate Devices List -->
+    <div id="candidates-container" style="display:flex; flex-direction:column; gap:10px;"></div>
+  </section>
+
+  <!-- ========================================================
+       VIEW 4: DEDICATED FULL-PAGE ADMIN MANAGEMENT WORKBENCH
+       ======================================================== -->
+  <section id="view-admin" class="hidden">
+    <!-- Header -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:10px;">
+      <div>
+        <h2 style="margin:0; font-size:19px; font-weight:800; display:flex; align-items:center; gap:8px;">
+          <span>👑</span><span>全网设备与用户管理中枢</span>
+        </h2>
+        <div style="font-size:12px; color:var(--muted); margin-top:3px;">
+          面向大规模用户与海量设备的高并发集中治理平台
+        </div>
+      </div>
+      <button onclick="switchView('control')" class="btn btn-secondary btn-small">
+        ← 返回我的设备控制台
+      </button>
+    </div>
+
+    <!-- 4 KPI Overview Cards -->
+    <div class="admin-stats-grid">
+      <div class="admin-stat-card">
+        <span class="stat-lbl">👥 平台注册用户</span>
+        <strong class="stat-num" id="stat-total-users">0</strong>
+        <small class="stat-sub">正常: <span id="stat-active-users">0</span> · 禁用: <span id="stat-disabled-users">0</span></small>
+      </div>
+      <div class="admin-stat-card">
+        <span class="stat-lbl">🔌 接入智能设备</span>
+        <strong class="stat-num" id="stat-total-devices">0</strong>
+        <small class="stat-sub">已绑定: <span id="stat-bound-devices">0</span> · 空闲: <span id="stat-unbound-devices">0</span></small>
+      </div>
+      <div class="admin-stat-card">
+        <span class="stat-lbl">📡 实时在线客户端</span>
+        <strong class="stat-num" id="stat-online-clients" style="color:var(--green)">0</strong>
+        <small class="stat-sub">Mosquitto 长连接保持</small>
+      </div>
+      <div class="admin-stat-card">
+        <span class="stat-lbl">🛡️ 今日注册审计</span>
+        <strong class="stat-num" id="stat-today-regs">0</strong>
+        <small class="stat-sub">频控限流策略运行中</small>
+      </div>
+    </div>
+
+    <!-- Admin Sub Tabs -->
+    <div class="admin-sub-tabs">
+      <button class="admin-sub-tab active" id="subtab-btn-users" onclick="switchAdminSubTab('users')">👥 用户全貌治理</button>
+      <button class="admin-sub-tab" id="subtab-btn-devices" onclick="switchAdminSubTab('devices')">🔌 设备全网调度与过户</button>
+      <button class="admin-sub-tab" id="subtab-btn-settings" onclick="switchAdminSubTab('settings')">⚙️ 系统安全与注册策略</button>
+    </div>
+
+    <!-- Sub-tab 1: Users Governance -->
+    <div id="admin-panel-users">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap;">
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <input id="admin-user-search" placeholder="搜索用户名 / 注册IP..." style="padding:7px 12px; border-radius:10px; border:1px solid var(--line); font-size:12px; width:220px;" onkeyup="if(event.key==='Enter') loadAdminUsersPage(1)">
+          <select id="admin-user-filter-status" style="padding:7px 10px; border-radius:10px; border:1px solid var(--line); font-size:12px;" onchange="loadAdminUsersPage(1)">
+            <option value="all">全部状态</option>
+            <option value="active">正常激活</option>
+            <option value="disabled">已禁用</option>
+          </select>
+          <button onclick="loadAdminUsersPage(1)" class="btn btn-green btn-small">🔍 检索</button>
+        </div>
+        <div style="font-size:12px; color:var(--muted)">共检索到 <b id="admin-user-total">0</b> 个账号</div>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>用户名</th>
+              <th>角色</th>
+              <th>注册 IP</th>
+              <th>设备数</th>
+              <th>状态</th>
+              <th>注册时间</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="admin-users-tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="pagination-bar" id="admin-users-pagination"></div>
+    </div>
+
+    <!-- Sub-tab 2: Device Fleet -->
+    <div id="admin-panel-devices" class="hidden">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap;">
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <input id="admin-device-search" placeholder="搜索 MAC / 设备名 / 归属用户..." style="padding:7px 12px; border-radius:10px; border:1px solid var(--line); font-size:12px; width:240px;" onkeyup="if(event.key==='Enter') loadAdminDevicesPage(1)">
+          <select id="admin-device-filter-type" style="padding:7px 10px; border-radius:10px; border:1px solid var(--line); font-size:12px;" onchange="loadAdminDevicesPage(1)">
+            <option value="all">所有类型</option>
+            <option value="ztc1">智能排插 TC1</option>
+            <option value="zm1">悟空检测仪 M1</option>
+          </select>
+          <select id="admin-device-filter-bound" style="padding:7px 10px; border-radius:10px; border:1px solid var(--line); font-size:12px;" onchange="loadAdminDevicesPage(1)">
+            <option value="all">所有归属</option>
+            <option value="bound">已绑定设备</option>
+            <option value="unbound">未绑定空闲</option>
+          </select>
+          <button onclick="loadAdminDevicesPage(1)" class="btn btn-green btn-small">🔍 检索</button>
+          <button onclick="loadAdminDevicesPage(adminDevicesPage)" class="btn btn-secondary btn-small" title="刷新设备列表与在线状态">🔄 刷新</button>
+        </div>
+        <div style="font-size:12px; color:var(--muted)">共检索到 <b id="admin-device-total">0</b> 台设备</div>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>MAC 地址</th>
+              <th>设备类型</th>
+              <th>设备名称</th>
+              <th>IP 地址</th>
+              <th>归属用户</th>
+              <th>在线状态</th>
+              <th>最后通信</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="admin-devices-tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="pagination-bar" id="admin-devices-pagination"></div>
+    </div>
+
+    <!-- Sub-tab 3: Security & Policy Settings -->
+    <div id="admin-panel-settings" class="hidden">
+      <div style="background:white; border:1px solid var(--line); border-radius:16px; padding:20px; max-width:600px;">
+        <h3 style="margin:0 0 16px; font-size:15px; font-weight:800;">🛡️ 平台安全与注册访问策略</h3>
+        
+        <div class="field">
+          <label>单 IP 最大允许注册用户数</label>
+          <input id="cfg-max-users" type="number" min="1" max="100" style="width:100%;">
+          <small style="color:var(--muted); font-size:11px;">防止恶意机器人或脚本针对特定出口公网 IP 批量刷号。</small>
+        </div>
+
+        <div class="field" style="margin-top:14px;">
+          <label>全站自主注册总开关</label>
+          <select id="cfg-allow-reg" style="width:100%;">
+            <option value="1">🟢 允许公网新用户自主注册账号</option>
+            <option value="0">🔴 关闭公开注册 (仅管理员可在后台分配账号)</option>
+          </select>
+        </div>
+
+        <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--line);">
+          <h3 style="margin:0 0 14px; font-size:14px; font-weight:800; color:var(--ink);">📡 MQTT 客户端连接参数</h3>
+          
+          <div class="field">
+            <label>对外展示 MQTT 服务器地址 / 自定义域名</label>
+            <input id="cfg-mqtt-host" placeholder="留空则自动按当前访问的主机 IP 或域名呈现" style="width:100%;">
+            <small style="color:var(--muted); font-size:11px;">自定义在登录使用说明中向用户呈现的 MQTT 地址。若留空，前端将自适应显示访问当前页面的浏览器 Host（IP 或域名）。</small>
+          </div>
+
+          <div class="field" style="margin-top:10px;">
+            <label>MQTT 通信端口</label>
+            <input id="cfg-mqtt-port" type="number" placeholder="1883" style="width:100%;">
+          </div>
+
+          <div class="field" style="margin-top:10px;">
+            <label>MQTT 认证账号</label>
+            <input id="cfg-mqtt-user" placeholder="如 master，留空表示无需认证 (允许匿名)" style="width:100%;">
+          </div>
+
+          <div class="field" style="margin-top:10px;">
+            <label>MQTT 认证密码</label>
+            <input id="cfg-mqtt-pass" placeholder="如 apple123，留空表示无密码" style="width:100%;">
+          </div>
+        </div>
+
+        <div style="margin-top:20px;">
+          <button onclick="saveAdminSettings()" class="btn btn-green">💾 保存平台与 MQTT 参数</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ========================================================
+     MODAL 1: PLUG SOCKET RENAME
+     ======================================================== -->
+<div id="rename-modal" class="modal-mask hidden" onclick="if(event.target===this)closeRenameModal()">
+  <div class="modal">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <h3 id="rename-modal-title" style="margin:0; font-size:16px; font-weight:800">修改插孔名称</h3>
+      <button onclick="closeRenameModal()" style="border:0; background:none; font-size:18px; cursor:pointer">✕</button>
+    </div>
+    <div class="field">
+      <label>自定义孔位名称</label>
+      <input id="rename-input" maxlength="12" placeholder="请输入电器名称 (如电视机、音响等)">
+    </div>
+    <div>
+      <div style="font-size:11px; color:var(--muted); font-weight:700; margin-bottom:6px;">常用电器快速选择:</div>
+      <div class="tags-row" id="quick-tags-container"></div>
+    </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:18px;">
+      <button onclick="resetPlugNameToDefault()" class="btn btn-secondary btn-small">恢复默认</button>
+      <div style="display:flex; gap:8px;">
+        <button onclick="closeRenameModal()" class="btn btn-secondary">取消</button>
+        <button onclick="savePlugName()" class="btn btn-green">确认保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     MODAL 2: PLUG HARDWARE TIMER SETTING
+     ======================================================== -->
+<div id="plug-timer-modal" class="modal-mask hidden" onclick="if(event.target===this)closePlugTimerModal()">
+  <div class="modal">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <div>
+        <h3 id="timer-modal-title" style="margin:0; font-size:16px; font-weight:800; display:flex; align-items:center; gap:6px;">
+          <span>⏰</span><span>孔位硬件定时设置</span>
+        </h3>
+        <div style="font-size:11px; color:var(--muted); margin-top:2px;">排插芯片级硬件定时 · 离线自动执行</div>
+      </div>
+      <button onclick="closePlugTimerModal()" style="border:0; background:none; font-size:18px; cursor:pointer">✕</button>
+    </div>
+
+    <!-- Active Task Box -->
+    <div style="background:#f5f3e9; border:1px solid var(--line); border-radius:11px; padding:9px 12px; margin-bottom:12px; font-size:12px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-weight:700; color:var(--soil)">当前槽位硬件定时:</span>
+        <span id="timer-status-badge" class="pill ok" style="font-size:10px; padding:1px 6px;">无计划</span>
+      </div>
+      <div id="timer-current-info" style="margin-top:4px; font-weight:600; color:var(--ink);">暂无正在生效的硬件定时任务</div>
+    </div>
+
+    <div class="field">
+      <label>任务槽位</label>
+      <select id="timer-slot" onchange="onTimerSlotChange()">
+        <option value="task_0">任务槽 1 (默认首选)</option>
+        <option value="task_1">任务槽 2</option>
+        <option value="task_2">任务槽 3</option>
+        <option value="task_3">任务槽 4</option>
+        <option value="task_4">任务槽 5 (倒计时备用)</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>触发动作</label>
+      <select id="timer-action">
+        <option value="1">🟢 接通开启插口</option>
+        <option value="0">🔴 切断关闭插口</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>设定执行时间 (24小时制)</label>
+      <input id="timer-time" type="time" lang="en-GB" step="60" value="08:00" required>
+    </div>
+
+    <div class="field">
+      <label>重复周期</label>
+      <select id="timer-repeat">
+        <option value="127">每天重复 (周一至周日)</option>
+        <option value="31">仅工作日 (周一至周五)</option>
+        <option value="96">仅周末 (周六、周日)</option>
+        <option value="0">仅一次 (执行后失效)</option>
+      </select>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px;">
+      <button onclick="clearPlugTimer()" class="btn btn-secondary btn-small" style="color:var(--red)" title="清除该槽位定时">清除定时</button>
+      <div style="display:flex; gap:8px;">
+        <button onclick="closePlugTimerModal()" class="btn btn-secondary">取消</button>
+        <button onclick="savePlugTimer()" class="btn btn-green">🚀 下发定时</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     MODAL 3: DEVICE RENAME MODAL
+     ======================================================== -->
+<div id="device-rename-modal" class="modal-mask hidden" onclick="if(event.target===this)closeDeviceRenameModal()">
+  <div class="modal">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <div>
+        <h3 id="device-rename-modal-title" style="margin:0; font-size:16px; font-weight:800; display:flex; align-items:center; gap:6px;">
+          <span>✏️</span><span>修改设备名称</span>
+        </h3>
+        <div id="device-rename-modal-sub" style="font-size:11px; color:var(--muted); margin-top:2px;">设置更具辨识度的设备名称</div>
+      </div>
+      <button onclick="closeDeviceRenameModal()" style="border:0; background:none; font-size:18px; cursor:pointer">✕</button>
+    </div>
+    <div class="field">
+      <label>自定义设备名称</label>
+      <input id="device-rename-input" maxlength="24" placeholder="例如：客厅智能排插、餐厅智能排插" onkeydown="if(event.key==='Enter')saveDeviceName(); else if(event.key==='Escape')closeDeviceRenameModal();">
+    </div>
+    <div>
+      <div style="font-size:11px; color:var(--muted); font-weight:700; margin-bottom:6px;">常用名称快捷选择:</div>
+      <div class="tags-row" id="device-rename-tags-container"></div>
+    </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:18px;">
+      <button onclick="resetDeviceNameToDefault()" class="btn btn-secondary btn-small" title="恢复为出厂默认名称">恢复默认</button>
+      <div style="display:flex; gap:8px;">
+        <button onclick="closeDeviceRenameModal()" class="btn btn-secondary">取消</button>
+        <button id="btn-save-device-rename" onclick="saveDeviceName()" class="btn btn-green">确认保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================
+     MODAL 4: ADMIN USER DEVICES INSPECTION MODAL
+     ======================================================== -->
+<div id="user-devices-modal" class="modal-mask hidden" onclick="if(event.target===this)closeUserDevicesModal()">
+  <div class="modal" style="width:min(720px, 96%); max-height:88vh; display:flex; flex-direction:column; padding:22px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--line);">
+      <div>
+        <h3 id="user-devices-modal-title" style="margin:0; font-size:17px; font-weight:800; display:flex; align-items:center; gap:6px;">
+          <span>📱</span><span>用户名下设备详情</span>
+        </h3>
+        <div id="user-devices-modal-sub" style="font-size:12px; color:var(--muted); margin-top:3px;">载入中...</div>
+      </div>
+      <button onclick="closeUserDevicesModal()" style="border:0; background:none; font-size:20px; cursor:pointer; color:var(--muted)">✕</button>
+    </div>
+
+    <div id="user-devices-content" style="flex:1; overflow-y:auto; padding-right:4px; display:flex; flex-direction:column; gap:12px;">
+      <!-- Populated dynamically -->
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; padding-top:12px; border-top:1px solid var(--line);">
+      <button id="btn-jump-filter-user-devices" class="btn btn-secondary btn-small" onclick="jumpToFilterUserDevices()">
+        🔍 在全局设备列表中筛选
+      </button>
+      <button onclick="closeUserDevicesModal()" class="btn btn-green">
+        完成查看
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Device Recent MQTT Communication Logs Modal -->
+<div id="device-mqtt-logs-modal" class="modal-mask hidden" onclick="if(event.target===this)closeDeviceMqttModal()">
+  <div class="modal" style="width:min(780px, 96%); max-height:90vh; display:flex; flex-direction:column; padding:22px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid var(--line);">
+      <div>
+        <h3 id="device-mqtt-modal-title" style="margin:0; font-size:17px; font-weight:800; display:flex; align-items:center; gap:8px;">
+          <span>📡</span><span>近期 MQTT 通信报文日志</span>
+        </h3>
+        <div id="device-mqtt-modal-sub" style="font-size:12px; color:var(--muted); margin-top:3px;">
+          正在拉取通信记录...
+        </div>
+      </div>
+      <button onclick="closeDeviceMqttModal()" style="border:0; background:none; font-size:20px; cursor:pointer; color:var(--muted)">✕</button>
+    </div>
+
+    <!-- Controls & Legend Bar -->
+    <div style="display:flex; justify-content:space-between; align-items:center; background:#f6f4eb; border:1px solid var(--line); border-radius:10px; padding:8px 12px; margin-bottom:12px; flex-wrap:wrap; gap:8px; font-size:12px;">
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+        <span style="display:flex; align-items:center; gap:4px;">
+          <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#207052;"></span>
+          <b style="color:#207052;">📥 RX 设备上报</b>
+        </span>
+        <span style="display:flex; align-items:center; gap:4px;">
+          <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#1c5986;"></span>
+          <b style="color:#1c5986;">📤 TX 平台下发</b>
+        </span>
+        <span style="color:var(--muted); font-size:11px;">(环形内存队列 · 最近 30 条)</span>
+      </div>
+      <div style="display:flex; gap:6px; align-items:center;">
+        <button id="btn-refresh-mqtt-logs" onclick="refreshCurrentDeviceMqttLogs()" class="btn btn-secondary btn-small" style="font-size:11px; padding:3px 8px;">
+          🔄 刷新报文
+        </button>
+        <button onclick="copyAllDeviceMqttLogs()" class="btn btn-secondary btn-small" style="font-size:11px; padding:3px 8px;">
+          📋 复制全部 JSON
+        </button>
+      </div>
+    </div>
+
+    <!-- Logs Container -->
+    <div id="device-mqtt-logs-content" style="flex:1; overflow-y:auto; padding-right:4px; display:flex; flex-direction:column; gap:8px; min-height:220px;">
+      <!-- Populated dynamically -->
+    </div>
+
+    <div style="display:flex; justify-content:flex-end; align-items:center; margin-top:14px; padding-top:10px; border-top:1px solid var(--line);">
+      <button onclick="closeDeviceMqttModal()" class="btn btn-green">
+        关闭
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Quick tags for socket rename
+  const commonTags = [
+    "电视机", "路由器", "音响", "机顶盒", "电脑", "落地灯",
+    "饮水机", "咖啡机", "微波炉", "电水壶", "餐边柜灯", "手机充电",
+    "鱼缸泵", "打印机", "风扇", "备用插座"
+  ];
+
+  let authToken = localStorage.getItem("fx_jwt_token");
+  let currentUser = null;
+  let currentAuthTab = "login";
+  let currentView = "control"; // 'control' | 'discovery' | 'admin'
+
+  let boundDevicesData = [];
+  let candidateDevicesData = [];
+  let currentRenameCtx = null;
+  let currentTimerCtx = null;
+  let timerRefreshInterval = null;
+
+  // Admin Pagination State
+  let adminUsersPage = 1;
+  let adminDevicesPage = 1;
+
+  // Toast Notification
+  function showToast(msg, icon = "✅") {
+    const box = document.getElementById("toast-box");
+    const div = document.createElement("div");
+    div.className = "toast";
+    div.innerHTML = `<span>${icon}</span><span>${escapeHtml(msg)}</span>`;
+    box.appendChild(div);
+    setTimeout(() => {
+      div.style.opacity = "0";
+      div.style.transform = "translateY(-10px)";
+      div.style.transition = "all 0.3s ease";
+      setTimeout(() => div.remove(), 300);
+    }, 3200);
+  }
+
+  // Formatting helpers
+  function formatPower(p) {
+    const val = parseFloat(p);
+    if (isNaN(val) || val <= 0) return { text: "0.0 W", hint: "(待机)" };
+    return { text: val.toFixed(1) + " W", hint: "(运行)" };
+  }
+
+  function formatRunTime(sec) {
+    const s = parseInt(sec, 10);
+    if (isNaN(s) || s <= 0) return "--";
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    if (h > 0) return `${h}小时${m}分`;
+    if (m > 0) return `${m}分`;
+    return `${s}秒`;
+  }
+
+  function formatHeartbeat(sec) {
+    if (sec === undefined || sec === null || sec > 3600) return "刚刚";
+    if (sec < 5) return "刚刚";
+    if (sec < 60) return `${sec}秒前`;
+    return `${Math.floor(sec/60)}分钟前`;
+  }
+
+  function formatLogTime(timeStr, ts) {
+    if (ts) {
+      try {
+        const d = new Date(ts * 1000);
+        const pad = n => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+      } catch (e) {}
+    }
+    return timeStr || '--';
+  }
+
+  // ========================================================
+  // VIEW ROUTING
+  // ========================================================
+  function switchView(viewName) {
+    currentView = viewName;
+    const vAuth = document.getElementById("view-auth");
+    const vCtrl = document.getElementById("view-control");
+    const vDisc = document.getElementById("view-discovery");
+    const vAdmin = document.getElementById("view-admin");
+    const navTabs = document.getElementById("top-nav-tabs");
+
+    const btnCtrl = document.getElementById("nav-btn-control");
+    const btnDisc = document.getElementById("nav-btn-discovery");
+    const btnAdmin = document.getElementById("nav-btn-admin");
+
+    if (viewName === "auth") {
+      vAuth.classList.remove("hidden");
+      vCtrl.classList.add("hidden");
+      vDisc.classList.add("hidden");
+      vAdmin.classList.add("hidden");
+      navTabs.classList.add("hidden");
+      return;
+    }
+
+    vAuth.classList.add("hidden");
+    navTabs.classList.remove("hidden");
+
+    btnCtrl.classList.toggle("active", viewName === "control");
+    btnDisc.classList.toggle("active", viewName === "discovery");
+    btnAdmin.classList.toggle("active", viewName === "admin");
+
+    vCtrl.classList.toggle("hidden", viewName !== "control");
+    vDisc.classList.toggle("hidden", viewName !== "discovery");
+    vAdmin.classList.toggle("hidden", viewName !== "admin");
+
+    if (viewName === "control") {
+      renderBoundCards();
+    } else if (viewName === "discovery") {
+      renderCandidates();
+    } else if (viewName === "admin") {
+      initAdminView();
+    }
+  }
+
+  // Auth Tabs
+  function switchAuthTab(tab) {
+    currentAuthTab = tab;
+    document.getElementById("tab-btn-login").classList.toggle("active", tab === "login");
+    document.getElementById("tab-btn-register").classList.toggle("active", tab === "register");
+    document.getElementById("auth-submit-btn").textContent = tab === "login" ? "登 录" : "立即注册";
+    document.getElementById("register-ip-notice").classList.toggle("hidden", tab === "login");
+    document.getElementById("auth-err-box").classList.add("hidden");
+  }
+
+  // Auth Submit
+  async function handleAuthSubmit(e) {
+    e.preventDefault();
+    const u = document.getElementById("auth-username").value.trim();
+    const p = document.getElementById("auth-password").value.trim();
+    const errBox = document.getElementById("auth-err-box");
+    errBox.classList.add("hidden");
+
+    const url = currentAuthTab === "login" ? "/fx/api/auth/login" : "/fx/api/auth/register";
+    try {
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({username: u, password: p})
+      });
+      const data = await resp.json();
+      if (!data.success) {
+        errBox.textContent = data.error || "请求失败";
+        errBox.classList.remove("hidden");
+        return;
+      }
+      onLoginSuccess(data.token, data.user);
+    } catch (err) {
+      errBox.textContent = "网络连接错误: " + err.message;
+      errBox.classList.remove("hidden");
+    }
+  }
+
+  function onLoginSuccess(token, user) {
+    authToken = token;
+    currentUser = user;
+    localStorage.setItem("fx_jwt_token", token);
+    document.getElementById("user-name-txt").textContent = user.username;
+    document.getElementById("user-badge").classList.remove("hidden");
+    document.getElementById("btn-logout").classList.remove("hidden");
+    if (user.role === "admin") {
+      document.getElementById("nav-btn-admin").classList.remove("hidden");
+    }
+
+    // Load initial data and route intelligently
+    loadDiscoveryData(true);
+
+    if (!timerRefreshInterval) {
+      timerRefreshInterval = setInterval(() => {
+        if (authToken && currentView === "control") loadDiscoveryData(false);
+      }, 3500);
+    }
+  }
+
+  function logoutUser() {
+    authToken = null;
+    currentUser = null;
+    localStorage.removeItem("fx_jwt_token");
+    if (timerRefreshInterval) clearInterval(timerRefreshInterval);
+    timerRefreshInterval = null;
+    document.getElementById("user-badge").classList.add("hidden");
+    document.getElementById("btn-logout").classList.add("hidden");
+    document.getElementById("nav-btn-admin").classList.add("hidden");
+    switchView("auth");
+  }
+
+  async function checkSession() {
+    if (!authToken) {
+      switchView("auth");
+      return;
+    }
+    try {
+      const resp = await fetch("/fx/api/auth/me", {
+        headers: {"Authorization": `Bearer ${authToken}`}
+      });
+      const data = await resp.json();
+      if (data.success && data.user) {
+        onLoginSuccess(authToken, data.user);
+      } else {
+        logoutUser();
+      }
+    } catch (e) {
+      logoutUser();
+    }
+  }
+
+  // ========================================================
+  // DISCOVERY & SMART ROUTING
+  // ========================================================
+  async function loadDiscoveryData(isInitial = false) {
+    if (!authToken) return;
+    try {
+      const resp = await fetch("/fx/api/discovery", {
+        headers: {"Authorization": `Bearer ${authToken}`}
+      });
+      const data = await resp.json();
+      if (!data.success) {
+        if (data.code === "UNAUTHORIZED") logoutUser();
+        return;
+      }
+
+      document.getElementById("disp-client-ip").textContent = data.client_ip || "--";
+      boundDevicesData = data.bound_devices || [];
+      candidateDevicesData = data.candidate_devices || [];
+
+      // Update badge
+      const candBadge = document.getElementById("nav-candidate-badge");
+      const unboundCandidates = candidateDevicesData.filter(c => !c.is_bound_other);
+      if (unboundCandidates.length > 0) {
+        candBadge.textContent = unboundCandidates.length;
+        candBadge.classList.remove("hidden");
+        document.getElementById("candidate-alert-txt").textContent = `当前网络下发现 ${unboundCandidates.length} 台可绑定的新设备`;
+        document.getElementById("control-top-banner").classList.remove("hidden");
+        document.getElementById("btn-bulk-bind").classList.remove("hidden");
+        document.getElementById("bulk-bind-count").textContent = unboundCandidates.length;
+      } else {
+        candBadge.classList.add("hidden");
+        document.getElementById("control-top-banner").classList.add("hidden");
+        document.getElementById("btn-bulk-bind").classList.add("hidden");
+      }
+
+      document.getElementById("back-bound-count").textContent = boundDevicesData.length;
+
+      // Smart Landing Route on initial login
+      if (isInitial) {
+        if (boundDevicesData.length === 0) {
+          switchView("discovery");
+          document.getElementById("zero-device-hint").classList.remove("hidden");
+        } else {
+          switchView("control");
+          document.getElementById("zero-device-hint").classList.add("hidden");
+        }
+      } else {
+        if (currentView === "control") renderBoundCards();
+        else if (currentView === "discovery") renderCandidates();
+      }
+
+    } catch (e) {
+      console.warn("Discovery fetch error:", e);
+    }
+  }
+
+  // ========================================================
+  // BOUND DEVICES RENDERING WITH MOBILE CAROUSEL & IN-PLACE UPDATES
+  // ========================================================
+  let renderedMacsKey = "";
+  let currentActiveSlideIdx = 0;
+  let isScrollJumping = false;
+
+  function renderBoundCards() {
+    const newMacsKey = boundDevicesData.map(d => d.mac).join(',');
+    const container = document.getElementById("bound-cards-container");
+    if (newMacsKey !== renderedMacsKey || !container || container.children.length === 0) {
+      renderedMacsKey = newMacsKey;
+      renderBoundCardsFull();
+    } else {
+      updateBoundCardsInPlace();
+    }
+  }
+
+  function renderBoundCardsFull() {
+    const container = document.getElementById("bound-cards-container");
+    const mobileTabs = document.getElementById("mobile-device-tabs");
+    const dotsBox = document.getElementById("dots-indicator");
+
+    container.innerHTML = "";
+    mobileTabs.innerHTML = "";
+    dotsBox.innerHTML = "";
+
+    if (boundDevicesData.length === 0) {
+      mobileTabs.style.display = "none";
+      dotsBox.style.display = "none";
+      container.innerHTML = `
+        <div style="grid-column:1/-1; text-align:center; padding:40px 16px; background:rgba(255,255,255,0.7); border:1px dashed var(--line); border-radius:18px;">
+          <div style="font-size:32px; margin-bottom:8px;">🔌</div>
+          <div style="font-size:15px; font-weight:800; color:var(--ink);">您尚未绑定任何设备</div>
+          <div style="font-size:12px; color:var(--muted); margin:6px 0 16px;">请前往「发现新设备」页面认领您局域网中的设备</div>
+          <button onclick="switchView('discovery')" class="btn btn-green">🔍 立即前往发现设备</button>
+        </div>
+      `;
+      return;
+    }
+
+    mobileTabs.style.display = window.innerWidth <= 768 ? "flex" : "none";
+    dotsBox.style.display = window.innerWidth <= 768 ? "flex" : "none";
+
+    // Clamp currentActiveSlideIdx
+    currentActiveSlideIdx = Math.max(0, Math.min(boundDevicesData.length - 1, currentActiveSlideIdx));
+
+    boundDevicesData.forEach((dev, idx) => {
+      // 1. Mobile Tab Button
+      const tabBtn = document.createElement("button");
+      tabBtn.className = `tab-btn ${idx === currentActiveSlideIdx ? 'active' : ''}`;
+      tabBtn.id = `dev-tab-${idx}`;
+      tabBtn.onclick = () => jumpToSlide(idx, true);
+      tabBtn.innerHTML = `
+        <span class="tab-icon">${dev.type === 'ztc1' ? '🔌' : '🍃'}</span>
+        <span class="tab-text">${escapeHtml(dev.name.length > 5 ? dev.name.substr(0, 5) + '…' : dev.name)}</span>
+      `;
+      mobileTabs.appendChild(tabBtn);
+
+      // 2. Dot Indicator
+      const dot = document.createElement("div");
+      dot.className = `dot-step ${idx === currentActiveSlideIdx ? 'active' : ''}`;
+      dot.id = `dot-step-${idx}`;
+      dot.onclick = () => jumpToSlide(idx, true);
+      dotsBox.appendChild(dot);
+
+      // 3. Card Wrapper (Slide)
+      const slide = document.createElement("div");
+      slide.className = "swipe-slide";
+      slide.id = `slide-${dev.mac}`;
+      slide.dataset.slideIndex = idx;
+      if (dev.type === "ztc1") {
+        slide.appendChild(createTC1Card(dev, idx));
+      } else if (dev.type === "zm1") {
+        slide.appendChild(createM1Card(dev, idx));
+      }
+      container.appendChild(slide);
+    });
+
+    initSwipeScrollListener();
+
+    if (window.innerWidth <= 768 && currentActiveSlideIdx > 0) {
+      requestAnimationFrame(() => {
+        jumpToSlide(currentActiveSlideIdx, false);
+      });
+    }
+  }
+
+  // Mobile Swipe Scroll Listener
+  let scrollThrottleTimer = null;
+  function initSwipeScrollListener() {
+    const container = document.getElementById('bound-cards-container');
+    if (!container || container.dataset.scrollBound === 'true') return;
+    container.dataset.scrollBound = 'true';
+
+    container.addEventListener('scroll', () => {
+      if (window.innerWidth > 768 || isScrollJumping) return;
+      if (scrollThrottleTimer) return;
+      scrollThrottleTimer = setTimeout(() => {
+        scrollThrottleTimer = null;
+        if (isScrollJumping) return;
+        const slides = container.querySelectorAll('.swipe-slide');
+        if (!slides || slides.length === 0) return;
+
+        const scrollCenter = container.scrollLeft + container.clientWidth / 2;
+        let closestIdx = 0;
+        let minDiff = Infinity;
+        slides.forEach((slide, idx) => {
+          const slideCenter = slide.offsetLeft + slide.offsetWidth / 2;
+          const diff = Math.abs(scrollCenter - slideCenter);
+          if (diff < minDiff) {
+            minDiff = diff;
+            closestIdx = idx;
+          }
+        });
+
+        if (closestIdx !== currentActiveSlideIdx) {
+          updateActiveSlideIndicators(closestIdx);
+        }
+      }, 50);
+    }, { passive: true });
+  }
+
+  function jumpToSlide(index, smooth = true) {
+    if (index < 0 || index >= boundDevicesData.length) return;
+    isScrollJumping = true;
+    currentActiveSlideIdx = index;
+    const container = document.getElementById('bound-cards-container');
+    const slides = container.querySelectorAll('.swipe-slide');
+    if (slides[index]) {
+      slides[index].scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', inline: 'center', block: 'nearest' });
+    }
+    updateActiveSlideIndicators(index);
+    setTimeout(() => { isScrollJumping = false; }, smooth ? 350 : 50);
+  }
+
+  function updateActiveSlideIndicators(index) {
+    currentActiveSlideIdx = index;
+    boundDevicesData.forEach((_, i) => {
+      const tab = document.getElementById(`dev-tab-${i}`);
+      const dot = document.getElementById(`dot-step-${i}`);
+      const isActive = (i === index);
+      if (tab) {
+        tab.classList.toggle('active', isActive);
+        if (isActive && !isScrollJumping) {
+          tab.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
+        }
+      }
+      if (dot) dot.classList.toggle('active', isActive);
+    });
+  }
+
+  // In-Place Telemetry & State Updates (Zero DOM Rebuild)
+  function updateBoundCardsInPlace() {
+    boundDevicesData.forEach(dev => {
+      // Online status
+      const onlinePill = document.getElementById(`online-pill-${dev.mac}`);
+      if (onlinePill) {
+        onlinePill.className = `pill ${dev.online ? 'ok' : 'err'}`;
+        onlinePill.textContent = dev.online ? '在线' : '离线';
+      }
+
+      // Heartbeat
+      const hbVal = document.getElementById(`hb-val-${dev.mac}`);
+      if (hbVal) {
+        hbVal.textContent = formatHeartbeat(dev.heartbeat_ago_sec);
+      }
+
+      // Name
+      const nameSpan = document.getElementById(`dev-name-${dev.mac}`);
+      if (nameSpan && nameSpan.textContent !== dev.name) {
+        nameSpan.textContent = dev.name;
+      }
+
+      if (dev.type === 'ztc1') {
+        const st = dev.state || {};
+        const plugs = st.plugs || [];
+        const pInfo = formatPower(st.power);
+
+        // Power
+        const pwrVal = document.getElementById(`pwr-val-${dev.mac}`);
+        if (pwrVal) pwrVal.textContent = pInfo.text;
+        const pwrHint = document.getElementById(`pwr-hint-${dev.mac}`);
+        if (pwrHint) pwrHint.textContent = pInfo.hint;
+
+        // Pulse dot
+        const dotPwr = document.getElementById(`dot-pwr-${dev.mac}`);
+        if (dotPwr) {
+          dotPwr.classList.add('pulse');
+          setTimeout(() => dotPwr.classList.remove('pulse'), 300);
+        }
+
+        // Runtime
+        const rtVal = document.getElementById(`runtime-val-${dev.mac}`);
+        if (rtVal) rtVal.textContent = formatRunTime(st.total_time);
+
+        // Plugs
+        plugs.forEach((p, idx) => {
+          updateTC1PlugInPlace(dev.mac, idx, p.on, p.name);
+        });
+      } else if (dev.type === 'zm1') {
+        const tel = dev.telemetry || {};
+        const pm = Number(tel.pm25);
+        const isGoodPm = !isNaN(pm) && pm <= 35;
+        const isMidPm = !isNaN(pm) && pm > 35 && pm <= 75;
+
+        const tVal = document.getElementById(`temp-val-${dev.mac}`);
+        if (tVal) tVal.textContent = tel.temperature !== undefined ? tel.temperature : '--';
+
+        const hVal = document.getElementById(`hum-val-${dev.mac}`);
+        if (hVal) hVal.textContent = tel.humidity !== undefined ? tel.humidity : '--';
+
+        const pmVal = document.getElementById(`pm25-val-${dev.mac}`);
+        if (pmVal) {
+          pmVal.textContent = tel.pm25 !== undefined ? tel.pm25 : '--';
+          pmVal.style.color = isGoodPm ? '#207052' : (isMidPm ? '#8a5a18' : '#b84a3d');
+        }
+        const pmHint = document.getElementById(`pm25-hint-${dev.mac}`);
+        if (pmHint) {
+          pmHint.textContent = isGoodPm ? '优 (空气极佳)' : (isMidPm ? '良 (适中)' : '轻度污染');
+          pmHint.style.color = isGoodPm ? '#207052' : '#8a5a18';
+        }
+
+        const hchoVal = document.getElementById(`hcho-val-${dev.mac}`);
+        if (hchoVal) hchoVal.textContent = tel.formaldehyde !== undefined ? tel.formaldehyde : '--';
+
+        // Screen toggle button
+        const screenBtn = document.getElementById(`btn-screen-${dev.mac}`);
+        if (screenBtn) {
+          screenBtn.textContent = tel.screen_on === 1 ? '🌙 休眠' : '☀️ 点亮';
+        }
+
+        // Brightness
+        for (let lvl = 0; lvl <= 4; lvl++) {
+          const seg = document.getElementById(`seg-btn-${dev.mac}-${lvl}`);
+          if (seg) seg.classList.toggle('active', tel.brightness === lvl);
+        }
+      }
+    });
+  }
+
+  function updateTC1PlugInPlace(mac, plugIdx, isOn, plugName) {
+    const btn = document.getElementById(`plug-btn-${mac}-${plugIdx}`);
+    if (!btn) return;
+    btn.classList.toggle('on', !!isOn);
+    if (plugName) {
+      const pName = btn.querySelector('.plug-name');
+      if (pName && pName.textContent !== plugName) pName.textContent = plugName;
+    }
+    const dot = btn.querySelector('.dot');
+    if (dot) dot.className = `dot ${isOn ? 'ok' : ''}`;
+    const pill = btn.querySelector('.pill');
+    if (pill) {
+      pill.className = `pill ${isOn ? 'ok' : 'warn'}`;
+      pill.textContent = isOn ? '开启' : '关闭';
+    }
+  }
+
+  // ========================================================
+  // DEVICE REORDERING (PERSISTENT CLOUD SORT)
+  // ========================================================
+  async function moveDeviceOrder(currentIndex, direction) {
+    const targetIndex = currentIndex + direction;
+    if (targetIndex < 0 || targetIndex >= boundDevicesData.length) return;
+
+    // Swap in array
+    const temp = boundDevicesData[currentIndex];
+    boundDevicesData[currentIndex] = boundDevicesData[targetIndex];
+    boundDevicesData[targetIndex] = temp;
+
+    // Immediate optimistic UI re-render
+    renderedMacsKey = boundDevicesData.map(d => d.mac).join(',');
+    currentActiveSlideIdx = targetIndex;
+    renderBoundCardsFull();
+
+    // Save to backend
+    const orderMacs = boundDevicesData.map(d => d.mac);
+    try {
+      await fetch("/fx/api/device/reorder", {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "Authorization": `Bearer ${authToken}`},
+        body: JSON.stringify({order: orderMacs})
+      });
+      showToast("设备排列顺序已保存");
+    } catch (e) {
+      console.warn("Reorder save error:", e);
+    }
+  }
+
+  // Create zTC1 Card
+  function createTC1Card(dev, index) {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.id = `card-${dev.mac}`;
+    const st = dev.state || {};
+    const plugs = st.plugs || [];
+    const pInfo = formatPower(st.power);
+
+    card.innerHTML = `
+      <div class="card-top">
+        <div class="card-title">
+          <div>
+            <h2>
+              <span>🔌</span>
+              <span id="dev-name-${dev.mac}">${escapeHtml(dev.name)}</span>
+              <button class="btn btn-secondary btn-small" style="padding:1px 5px; font-size:10px;" onclick="openDeviceRenameModal('${dev.mac}', '${escapeHtml(dev.name)}')">✏️</button>
+            </h2>
+            <div class="device-id">MAC: ${dev.mac.toUpperCase()}</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
+            <!-- Reorder buttons -->
+            <div style="display:inline-flex; gap:2px; background:#eef3ea; border-radius:8px; padding:2px; border:1px solid var(--line);">
+              <button class="btn btn-secondary btn-small" style="padding:2px 6px; font-size:10px;" title="前移" onclick="moveDeviceOrder(${index}, -1)" ${index === 0 ? 'disabled' : ''}>◀</button>
+              <button class="btn btn-secondary btn-small" style="padding:2px 6px; font-size:10px;" title="后移" onclick="moveDeviceOrder(${index}, 1)" ${index === boundDevicesData.length - 1 ? 'disabled' : ''}>▶</button>
+            </div>
+            <button onclick="openDeviceMqttModal('${dev.mac}', '${escapeHtml(dev.name)}')" class="btn btn-secondary btn-small" title="查看该设备近期 MQTT 通信报文" style="padding:2px 8px; font-weight:700;">📡 报文</button>
+            <button onclick="setTC1All('${dev.mac}', true)" class="btn btn-secondary btn-small">全开</button>
+            <button onclick="setTC1All('${dev.mac}', false)" class="btn btn-secondary btn-small">全关</button>
+            <button onclick="rebootDevice('${dev.mac}', '${escapeHtml(dev.name)}')" class="btn btn-secondary btn-small" title="远程重启设备" style="padding:2px 6px;">🔄 重启</button>
+            <button onclick="openUnbindModal('${dev.mac}', '${escapeHtml(dev.name)}', false)" class="btn btn-secondary btn-small" style="color:var(--red);">解绑</button>
+            <span id="online-pill-${dev.mac}" class="pill ${dev.online ? 'ok' : 'err'}">${dev.online ? '在线' : '离线'}</span>
+          </div>
+        </div>
+
+        <!-- 6 Plugs Grid -->
+        <div class="plugs-grid" id="plugs-grid-${dev.mac}">
+          ${plugs.map((p, idx) => `
+            <div class="plug-btn ${p.on ? 'on' : ''}" id="plug-btn-${dev.mac}-${idx}" onclick="togglePlug('${dev.mac}', ${idx}, event)">
+              <div class="plug-head">
+                <span class="plug-name" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</span>
+                <span class="timer-icon" title="设置定时" onclick="openTimerModal('${dev.mac}', ${idx}, '${escapeHtml(p.name)}', event)">⏰</span>
+                <span class="rename-icon" title="重命名" onclick="openRenameModal('${dev.mac}', ${idx}, '${escapeHtml(p.name)}', event)">✏️</span>
+                <span class="dot ${p.on ? 'ok' : ''}"></span>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+                <span style="font-size:10px; color:var(--muted); font-family:monospace">孔位 ${idx + 1}</span>
+                <span class="pill ${p.on ? 'ok' : 'warn'}" style="font-size:9px; padding:1px 6px;">${p.on ? '开启' : '关闭'}</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- Bottom Telemetry Bar -->
+      <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--muted); padding-top:10px; border-top:1px solid var(--line); flex-wrap:wrap; gap:6px;">
+        <span style="display:flex; align-items:center; gap:5px;">
+          <span class="live-dot" id="dot-pwr-${dev.mac}"></span>
+          <span>实时功率: <b id="pwr-val-${dev.mac}" style="color:var(--green)">${pInfo.text}</b> <small id="pwr-hint-${dev.mac}" style="color:var(--muted)">${pInfo.hint}</small></span>
+        </span>
+        <span>累计运行: <b id="runtime-val-${dev.mac}" style="color:var(--ink)">${formatRunTime(st.total_time)}</b></span>
+        <span>心跳: <span id="hb-val-${dev.mac}" style="color:var(--green)">${formatHeartbeat(dev.heartbeat_ago_sec)}</span></span>
+      </div>
+    `;
+    return card;
+  }
+
+  // Create zM1 Card
+  function createM1Card(dev, index) {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.id = `card-${dev.mac}`;
+    const tel = dev.telemetry || {};
+    const pm = Number(tel.pm25);
+    const isGoodPm = !isNaN(pm) && pm <= 35;
+    const isMidPm = !isNaN(pm) && pm > 35 && pm <= 75;
+
+    card.innerHTML = `
+      <div class="card-top">
+        <div class="card-title">
+          <div>
+            <h2>
+              <span>🍃</span>
+              <span id="dev-name-${dev.mac}">${escapeHtml(dev.name)}</span>
+              <button class="btn btn-secondary btn-small" style="padding:1px 5px; font-size:10px;" onclick="openDeviceRenameModal('${dev.mac}', '${escapeHtml(dev.name)}')">✏️</button>
+            </h2>
+            <div class="device-id">MAC: ${dev.mac.toUpperCase()}</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
+            <!-- Reorder buttons -->
+            <div style="display:inline-flex; gap:2px; background:#eef3ea; border-radius:8px; padding:2px; border:1px solid var(--line);">
+              <button class="btn btn-secondary btn-small" style="padding:2px 6px; font-size:10px;" title="前移" onclick="moveDeviceOrder(${index}, -1)" ${index === 0 ? 'disabled' : ''}>◀</button>
+              <button class="btn btn-secondary btn-small" style="padding:2px 6px; font-size:10px;" title="后移" onclick="moveDeviceOrder(${index}, 1)" ${index === boundDevicesData.length - 1 ? 'disabled' : ''}>▶</button>
+            </div>
+            <button onclick="openDeviceMqttModal('${dev.mac}', '${escapeHtml(dev.name)}')" class="btn btn-secondary btn-small" title="查看该设备近期 MQTT 通信报文" style="padding:2px 8px; font-weight:700;">📡 报文</button>
+            <button id="btn-screen-${dev.mac}" onclick="toggleM1Screen('${dev.mac}', ${tel.screen_on === 1 ? 0 : 1})" class="btn btn-secondary btn-small">
+              ${tel.screen_on === 1 ? '🌙 休眠' : '☀️ 点亮'}
+            </button>
+            <button onclick="rebootDevice('${dev.mac}', '${escapeHtml(dev.name)}')" class="btn btn-secondary btn-small" title="远程重启设备" style="padding:2px 6px;">🔄 重启</button>
+            <button onclick="openUnbindModal('${dev.mac}', '${escapeHtml(dev.name)}', false)" class="btn btn-secondary btn-small" style="color:var(--red);">解绑</button>
+            <span id="online-pill-${dev.mac}" class="pill ${dev.online ? 'ok' : 'err'}">${dev.online ? '在线' : '离线'}</span>
+          </div>
+        </div>
+
+        <!-- 4 Environment Metrics -->
+        <div class="metrics-grid">
+          <div class="metric">
+            <span class="label">室内温度</span>
+            <div><strong id="temp-val-${dev.mac}">${tel.temperature !== undefined ? tel.temperature : '--'}</strong> <span style="font-size:11px;">℃</span></div>
+            <small class="hint" style="color:var(--muted)">传感器巡检</small>
+          </div>
+          <div class="metric">
+            <span class="label">相对湿度</span>
+            <div><strong id="hum-val-${dev.mac}">${tel.humidity !== undefined ? tel.humidity : '--'}</strong> <span style="font-size:11px;">%</span></div>
+            <small class="hint" style="color:var(--muted)">体感适宜</small>
+          </div>
+          <div class="metric">
+            <span class="label">PM2.5 颗粒物</span>
+            <div><strong id="pm25-val-${dev.mac}" style="color:${isGoodPm ? '#207052' : (isMidPm ? '#8a5a18' : '#b84a3d')}">${tel.pm25 !== undefined ? tel.pm25 : '--'}</strong> <span style="font-size:10px;">μg/m³</span></div>
+            <small class="hint" id="pm25-hint-${dev.mac}" style="color:${isGoodPm ? '#207052' : '#8a5a18'}">${isGoodPm ? '优 (空气极佳)' : (isMidPm ? '良 (适中)' : '轻度污染')}</small>
+          </div>
+          <div class="metric">
+            <span class="label">甲醛 HCHO</span>
+            <div><strong id="hcho-val-${dev.mac}">${tel.formaldehyde !== undefined ? tel.formaldehyde : '--'}</strong> <span style="font-size:10px;">mg/m³</span></div>
+            <small class="hint" style="color:var(--muted)">化学传感</small>
+          </div>
+        </div>
+
+        <!-- Brightness Segment Bar -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+          <span style="font-size:12px; color:var(--muted); font-weight:700;">屏幕亮度:</span>
+          <div class="seg-group" style="width:200px;">
+            ${[0, 1, 2, 3, 4].map(lvl => `
+              <button class="seg-btn ${tel.brightness === lvl ? 'active' : ''}" id="seg-btn-${dev.mac}-${lvl}" onclick="setM1Brightness('${dev.mac}', ${lvl})">${lvl === 0 ? '关' : lvl + '档'}</button>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Telemetry Bar -->
+      <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--muted); padding-top:10px; border-top:1px solid var(--line);">
+        <span style="display:flex; align-items:center; gap:5px;">
+          <span class="live-dot" style="background:#207052"></span>
+          <span>环境实时监测正常</span>
+        </span>
+        <span>心跳: <span id="hb-val-${dev.mac}" style="color:var(--green)">${formatHeartbeat(dev.heartbeat_ago_sec)}</span></span>
+      </div>
+    `;
+    return card;
+  }
+
+  // ========================================================
+  // DISCOVERY CANDIDATES & NO-REDIRECT BINDING
+  // ========================================================
+  function renderCandidates() {
+    const container = document.getElementById("candidates-container");
+    container.innerHTML = "";
+
+    if (candidateDevicesData.length === 0) {
+      container.innerHTML = `
+        <div style="text-align:center; padding:40px 16px; background:rgba(255,255,255,0.7); border:1px dashed var(--line); border-radius:18px;">
+          <div style="font-size:32px; margin-bottom:8px;">📡</div>
+          <div style="font-size:15px; font-weight:800; color:var(--ink);">当前局域网下未发现可供认领的新设备</div>
+          <div style="font-size:12px; color:var(--muted); margin:6px auto 16px; max-width:480px; line-height:1.5;">
+            请确保您的手机/电脑与斐讯 TC1/M1 连入同一 Wi-Fi 路由器。<br>新插上电并连网的设备将实时同步上报并出现在此处。
+          </div>
+          <div style="display:flex; justify-content:center; gap:8px;">
+            <button onclick="loadDiscoveryData()" class="btn btn-secondary btn-small">🔄 重新刷新检测</button>
+            <button onclick="openManualBindModal()" class="btn btn-green btn-small">🏷️ 手动输入 MAC 绑定</button>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    candidateDevicesData.forEach(c => {
+      const div = document.createElement("div");
+      div.className = "candidate-card";
+      div.id = `candidate-card-${c.mac}`;
+      div.innerHTML = `
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span style="font-size:26px;">${c.type === 'ztc1' ? '🔌' : '🍃'}</span>
+          <div>
+            <div style="font-size:15px; font-weight:800; color:var(--ink);">${escapeHtml(c.name)}</div>
+            <div style="font-size:11px; color:var(--muted); margin-top:2px;">
+              MAC: <span style="font-family:monospace">${c.mac.toUpperCase()}</span> · IP: ${c.ip}
+            </div>
+          </div>
+        </div>
+        <div>
+          ${c.is_bound_other ? `
+            <span class="pill warn">已属账号 ${escapeHtml(c.bound_username)}</span>
+          ` : `
+            <button id="btn-bind-${c.mac}" onclick="bindDevice('${c.mac}', '${escapeHtml(c.name)}')" class="btn btn-green">⚡ 立即绑定至我的账号</button>
+          `}
+        </div>
+      `;
+      container.appendChild(div);
+    });
+  }
+
+  // Single Bind (Does NOT redirect, stays on discovery page)
+  async function bindDevice(mac, name) {
+    const btn = document.getElementById(`btn-bind-${mac}`);
+    if (btn) { btn.disabled = true; btn.textContent = "绑定中..."; }
+
+    try {
+      const resp = await fetch("/fx/api/device/bind", {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "Authorization": `Bearer ${authToken}`},
+        body: JSON.stringify({mac})
+      });
+      const data = await resp.json();
+      if (data.success) {
+        showToast(`已成功绑定设备 [${name || mac}]！您可以继续添加其他设备。`);
+        // Refresh data silently without leaving page
+        renderedMacsKey = "";
+        await loadDiscoveryData(false);
+      } else {
+        alert("绑定失败: " + (data.error || "未知错误"));
+        if (btn) { btn.disabled = false; btn.textContent = "⚡ 立即绑定至我的账号"; }
+      }
+    } catch (e) {
+      alert("网络错误: " + e.message);
+      if (btn) { btn.disabled = false; btn.textContent = "⚡ 立即绑定至我的账号"; }
+    }
+  }
+
+  // Bulk Bind All Devices (Does NOT redirect)
+  async function bindAllDevices() {
+    const btn = document.getElementById("btn-bulk-bind");
+    if (btn) { btn.disabled = true; btn.textContent = "正在批量绑定..."; }
+
+    try {
+      const resp = await fetch("/fx/api/device/bind_all", {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "Authorization": `Bearer ${authToken}`}
+      });
+      const data = await resp.json();
+      if (data.success) {
+        showToast(`🎉 成功添加全部 ${data.bound_count} 台设备！您可以随时点击右上角进入控制台。`);
+        renderedMacsKey = "";
+        await loadDiscoveryData(false);
+      } else {
+        alert("批量绑定失败: " + data.error);
+      }
+    } catch (e) {
+      alert("网络错误: " + e.message);
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+
+  // ========================================================
+  // UNBIND MODAL CONTROLLER (GLASSMORPHISM)
+  // ========================================================
+  let currentUnbindCtx = null;
+
+  function openUnbindModal(mac, name, isAdmin = false, onSuccess = null) {
+    currentUnbindCtx = { mac, name, isAdmin, onSuccess };
+    document.getElementById("unbind-modal-title-txt").textContent = isAdmin ? "管理员强制解绑设备" : "确认解绑设备";
+    document.getElementById("unbind-modal-msg").textContent = isAdmin 
+      ? `确定要强制解绑设备 [${name}] 吗？` 
+      : `确定要从您的账号解绑设备 [${name}] 吗？`;
+    document.getElementById("unbind-modal-detail").textContent = isAdmin
+      ? "强制解绑后，该设备将解除与当前用户的绑定关系，并退回局域网待认领设备池。"
+      : "解绑后，该设备将退回局域网待认领设备池，您可以随时在发现页重新认领。";
+    document.getElementById("unbind-modal-dev-name").textContent = name;
+    document.getElementById("unbind-modal-dev-mac").textContent = mac.toUpperCase();
+    document.getElementById("unbind-modal-confirm-btn").textContent = isAdmin ? "强制解绑" : "确认解绑";
+    document.getElementById("device-unbind-modal").classList.remove("hidden");
+  }
+
+  function closeUnbindModal() {
+    document.getElementById("device-unbind-modal").classList.add("hidden");
+    currentUnbindCtx = null;
+  }
+
+  async function executeUnbindConfirmed() {
+    if (!currentUnbindCtx) return;
+    const { mac, isAdmin, onSuccess } = currentUnbindCtx;
+    const btn = document.getElementById("unbind-modal-confirm-btn");
+    btn.disabled = true;
+    btn.textContent = "正在解绑...";
+
+    try {
+      const url = isAdmin ? "/fx/api/admin/device/unbind" : "/fx/api/device/unbind";
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${authToken}`
+        },
+        body: JSON.stringify({ mac })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        showToast(isAdmin ? `设备 ${mac.toUpperCase()} 已强制解绑` : "设备已成功解绑");
+        closeUnbindModal();
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          renderedMacsKey = "";
+          await loadDiscoveryData(false);
+        }
+      } else {
+        alert("解绑失败: " + (data.error || "未知错误"));
+      }
+    } catch (err) {
+      alert("网络请求失败: " + err.message);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ========================================================
+  // ADMIN TRANSFER MODAL CONTROLLER (GLASSMORPHISM)
+  // ========================================================
+  let currentTransferCtx = null;
+
+  function openTransferModal(mac, currentOwner = "", onSuccess = null) {
+    currentTransferCtx = { mac, currentOwner, onSuccess };
+    document.getElementById("transfer-modal-mac").textContent = mac.toUpperCase();
+    document.getElementById("transfer-modal-current").textContent = currentOwner ? `用户 [${currentOwner}]` : "未绑定 (空闲)";
+    document.getElementById("transfer-modal-target-input").value = "";
+    document.getElementById("transfer-modal-err").classList.add("hidden");
+    document.getElementById("device-transfer-modal").classList.remove("hidden");
+    setTimeout(() => document.getElementById("transfer-modal-target-input").focus(), 150);
+  }
+
+  function closeTransferModal() {
+    document.getElementById("device-transfer-modal").classList.add("hidden");
+    currentTransferCtx = null;
+  }
+
+  async function executeTransferConfirmed() {
+    if (!currentTransferCtx) return;
+    const { mac, currentOwner, onSuccess } = currentTransferCtx;
+    const target = document.getElementById("transfer-modal-target-input").value.trim();
+    const errBox = document.getElementById("transfer-modal-err");
+    errBox.classList.add("hidden");
+
+    if (!target) {
+      errBox.textContent = "请输入目标用户名";
+      errBox.classList.remove("hidden");
+      return;
+    }
+    if (target === currentOwner) {
+      errBox.textContent = "目标用户名与当前所属用户相同";
+      errBox.classList.remove("hidden");
+      return;
+    }
+
+    const btn = document.getElementById("transfer-modal-confirm-btn");
+    btn.disabled = true;
+    btn.textContent = "正在处理...";
+
+    try {
+      const resp = await fetch("/fx/api/admin/device/transfer", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${authToken}`
+        },
+        body: JSON.stringify({ mac, target_username: target })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        showToast(`设备已成功转移给用户 [${target}]`);
+        closeTransferModal();
+        if (onSuccess) onSuccess();
+      } else {
+        errBox.textContent = data.error || "转让失败";
+        errBox.classList.remove("hidden");
+      }
+    } catch (err) {
+      errBox.textContent = "网络请求失败: " + err.message;
+      errBox.classList.remove("hidden");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "确认转让";
+    }
+  }
+
+  // ========================================================
+  // MANUAL BIND BY MAC MODAL CONTROLLER (GLASSMORPHISM)
+  // ========================================================
+  function openManualBindModal() {
+    document.getElementById("manual-mac-input").value = "";
+    document.getElementById("manual-name-input").value = "";
+    document.getElementById("manual-dev-type").value = "auto";
+    document.getElementById("manual-bind-err").classList.add("hidden");
+    document.getElementById("manual-bind-modal").classList.remove("hidden");
+    setTimeout(() => document.getElementById("manual-mac-input").focus(), 150);
+  }
+
+  function closeManualBindModal() {
+    document.getElementById("manual-bind-modal").classList.add("hidden");
+  }
+
+  async function executeManualBind() {
+    const rawMac = document.getElementById("manual-mac-input").value.trim();
+    const mac = rawMac.replace(/[^a-fA-F0-9]/g, '').toLowerCase();
+    const name = document.getElementById("manual-name-input").value.trim();
+    const dtype = document.getElementById("manual-dev-type").value;
+    const errBox = document.getElementById("manual-bind-err");
+    errBox.classList.add("hidden");
+
+    if (!mac || mac.length !== 12) {
+      errBox.textContent = "请输入正确的 12 位十六进制 MAC 地址（例如 D0BAE46448C0）";
+      errBox.classList.remove("hidden");
+      return;
+    }
+
+    const btn = document.getElementById("btn-confirm-manual-bind");
+    btn.disabled = true;
+    btn.textContent = "正在绑定...";
+
+    try {
+      const resp = await fetch("/fx/api/device/bind", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${authToken}`
+        },
+        body: JSON.stringify({
+          mac: mac,
+          name: name,
+          device_type: dtype === "auto" ? "" : dtype
+        })
+      });
+      const data = await resp.json();
+      if (!data.success) {
+        errBox.textContent = data.error || "绑定失败";
+        errBox.classList.remove("hidden");
+        return;
+      }
+
+      showToast(`设备 ${mac.toUpperCase()} 绑定成功！`);
+      closeManualBindModal();
+      renderedMacsKey = "";
+      await loadDiscoveryData(false);
+      switchView("control");
+    } catch (err) {
+      errBox.textContent = "网络连接错误: " + err.message;
+      errBox.classList.remove("hidden");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "确认添加并绑定";
+    }
+  }
+
+
+  // ========================================================
+  // DEVICE RENAME CUSTOM MODAL
+  // ========================================================
+  let currentDeviceRenameCtx = null;
+  const deviceQuickTags = [
+    "客厅智能排插", "餐厅智能排插", "书房智能排插", "主卧智能排插", "次卧排插",
+    "客厅空气检测仪", "卧室空气检测仪", "书房检测仪", "电视柜排插", "电脑桌排插"
+  ];
+
+  function openDeviceRenameModal(mac, oldName) {
+    const dev = boundDevicesData.find(d => d.mac === mac);
+    let defName = "智能设备";
+    if (dev) {
+      if (dev.device_type === "zm1") defName = "斐讯悟空 M1 空气检测仪";
+      else if (dev.device_type === "ztc1") defName = "斐讯 TC1 智能排插";
+      else defName = dev.name || "智能设备";
+    }
+    currentDeviceRenameCtx = { mac, oldName, defaultName: defName };
+
+    document.getElementById("device-rename-modal-sub").textContent = `设备 MAC: ${mac.toUpperCase()} · 原名称: ${oldName || '未命名'}`;
+    const inp = document.getElementById("device-rename-input");
+    inp.value = oldName || "";
+
+    const tagContainer = document.getElementById("device-rename-tags-container");
+    tagContainer.innerHTML = deviceQuickTags.map(t =>
+      `<div class="tag-item" onclick="applyDeviceQuickTag('${escapeHtml(t)}')">${escapeHtml(t)}</div>`
+    ).join("");
+
+    document.getElementById("device-rename-modal").classList.remove("hidden");
+    setTimeout(() => { inp.focus(); inp.select(); }, 50);
+  }
+
+  function promptRenameDevice(mac, oldName) {
+    openDeviceRenameModal(mac, oldName);
+  }
+
+  function closeDeviceRenameModal() {
+    document.getElementById("device-rename-modal").classList.add("hidden");
+    currentDeviceRenameCtx = null;
+  }
+
+  function applyDeviceQuickTag(txt) {
+    const inp = document.getElementById("device-rename-input");
+    inp.value = txt;
+    inp.focus();
+  }
+
+  function resetDeviceNameToDefault() {
+    if (!currentDeviceRenameCtx) return;
+    const inp = document.getElementById("device-rename-input");
+    inp.value = currentDeviceRenameCtx.defaultName;
+    inp.focus();
+  }
+
+  async function saveDeviceName() {
+    if (!currentDeviceRenameCtx) return;
+    const { mac, oldName } = currentDeviceRenameCtx;
+    const inp = document.getElementById("device-rename-input");
+    const newName = inp.value.trim();
+
+    if (!newName) {
+      showToast("设备名称不能为空", "⚠️");
+      inp.focus();
+      return;
+    }
+    if (newName === oldName) {
+      closeDeviceRenameModal();
+      return;
+    }
+
+    const btn = document.getElementById("btn-save-device-rename");
+    if (btn) { btn.disabled = true; btn.textContent = "保存中..."; }
+
+    try {
+      const resp = await fetch("/fx/api/device/rename", {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "Authorization": `Bearer ${authToken}`},
+        body: JSON.stringify({mac, name: newName})
+      });
+      const data = await resp.json();
+      if (data.success) {
+        showToast("设备名称已修改");
+        closeDeviceRenameModal();
+        if (currentView === "admin") {
+          loadAdminDevicesPage(adminDevicesPage);
+        } else {
+          renderedMacsKey = "";
+          await loadDiscoveryData(false);
+        }
+      } else {
+        showToast("重命名失败: " + (data.error || "未知错误"), "❌");
+      }
+    } catch (e) {
+      showToast("网络错误: " + e.message, "❌");
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = "确认保存"; }
+    }
+  }
+
+  // ========================================================
+  // TC1 & M1 LIVE CONTROLS (IN-PLACE)
+  // ========================================================
+  async function togglePlug(mac, plugIdx, nextState, e) {
+    let ev = e;
+    let explicitState = null;
+    if (nextState instanceof Event || (nextState && nextState.target)) {
+      ev = nextState;
+    } else if (typeof nextState === 'boolean') {
+      explicitState = nextState;
+    }
+
+    if (ev && ev.target && (ev.target.classList.contains('rename-icon') || ev.target.classList.contains('timer-icon'))) return;
+
+    // Optimistic UI update in-place
+    const dev = boundDevicesData.find(d => d.mac === mac);
+    if (!dev || !dev.state || !dev.state.plugs || !dev.state.plugs[plugIdx]) return;
+
+    const currentOn = !!dev.state.plugs[plugIdx].on;
+    // If explicitState is provided and differs from currentOn, use explicitState.
+    // If explicitState equals currentOn (due to stale inline onclick attribute), flip it!
+    const targetState = (explicitState !== null && explicitState !== currentOn) ? explicitState : !currentOn;
+
+    dev.state.plugs[plugIdx].on = targetState;
+    updateTC1PlugInPlace(mac, plugIdx, targetState);
+
+    try {
+      await fetch("/fx/api/device/control", {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "Authorization": `Bearer ${authToken}`},
+        body: JSON.stringify({mac, action: "set_plug", plug_index: plugIdx, state: targetState})
+      });
+    } catch (err) {
+      console.warn("Control error:", err);
+    }
+  }
+
+  async function setTC1All(mac, state) {
+    const dev = boundDevicesData.find(d => d.mac === mac);
+    if (dev && dev.state && dev.state.plugs) {
+      dev.state.plugs.forEach((p, idx) => {
+        p.on = state;
+        updateTC1PlugInPlace(mac, idx, state);
+      });
+    }
+    try {
+      await fetch("/fx/api/device/control", {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "Authorization": `Bearer ${authToken}`},
+        body: JSON.stringify({mac, action: "set_all", state})
+      });
+    } catch (e) {}
+  }
+
+  async function setM1Brightness(mac, level) {
+    const dev = boundDevicesData.find(d => d.mac === mac);
+    if (dev && dev.telemetry) {
+      dev.telemetry.brightness = level;
+      for (let lvl = 0; lvl <= 4; lvl++) {
+        const seg = document.getElementById(`seg-btn-${mac}-${lvl}`);
+        if (seg) seg.classList.toggle('active', lvl === level);
+      }
+    }
+    await fetch("/fx/api/device/control", {
+      method: "POST",
+      headers: {"Content-Type": "application/json", "Authorization": `Bearer ${authToken}`},
+      body: JSON.stringify({mac, action: "set_brightness", brightness: level})
+    });
+  }
+
+  async function toggleM1Screen(mac, on) {
+    const dev = boundDevicesData.find(d => d.mac === mac);
+    if (dev && dev.telemetry) {
+      dev.telemetry.screen_on = on;
+      const btn = document.getElementById(`btn-screen-${mac}`);
+      if (btn) btn.textContent = on === 1 ? '🌙 休眠' : '☀️ 点亮';
+    }
+    await fetch("/fx/api/device/control", {
+      method: "POST",
+      headers: {"Content-Type": "application/json", "Authorization": `Bearer ${authToken}`},
+      body: JSON.stringify({mac, action: "set_screen", on})
+    });
+  }
+
+  async function rebootDevice(mac, name) {
+    const dispName = name || mac;
+    if (!confirm(`确定要向设备【${dispName}】下发重启指令吗？\n设备将断开并重新连入系统。`)) return;
+    try {
+      showToast(`正在向【${dispName}】发送重启指令...`);
+      const resp = await fetch("/fx/api/device/control", {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "Authorization": `Bearer ${authToken}`},
+        body: JSON.stringify({mac, action: "reboot"})
+      });
+      const res = await resp.json();
+      if (res.success) {
+        showToast(`已成功下发重启指令，【${dispName}】正在重启...`, "ok");
+      } else {
+        showToast(res.error || "重启指令下发失败", "err");
+      }
+    } catch (e) {
+      showToast("网络错误: " + e.message, "err");
+    }
+  }
+
+  // ========================================================
+  // SOCKET RENAME MODAL
+  // ========================================================
+  function initQuickTags() {
+    const box = document.getElementById("quick-tags-container");
+    box.innerHTML = "";
+    commonTags.forEach(t => {
+      const sp = document.createElement("span");
+      sp.className = "tag-item";
+      sp.textContent = t;
+      sp.onclick = () => { document.getElementById("rename-input").value = t; };
+      box.appendChild(sp);
+    });
+  }
+
+  function openRenameModal(mac, plugIdx, curName, e) {
+    if (e) e.stopPropagation();
+    currentRenameCtx = {mac, plugIdx};
+    document.getElementById("rename-modal-title").textContent = `修改孔位 ${plugIdx + 1} 名称`;
+    document.getElementById("rename-input").value = curName;
+    document.getElementById("rename-modal").classList.remove("hidden");
+    document.getElementById("rename-input").focus();
+  }
+
+  function closeRenameModal() {
+    document.getElementById("rename-modal").classList.add("hidden");
+    currentRenameCtx = null;
+  }
+
+  function resetPlugNameToDefault() {
+    if (!currentRenameCtx) return;
+    document.getElementById("rename-input").value = `插孔 ${currentRenameCtx.plugIdx + 1}`;
+  }
+
+  async function savePlugName() {
+    if (!currentRenameCtx) return;
+    const {mac, plugIdx} = currentRenameCtx;
+    const val = document.getElementById("rename-input").value.trim();
+    if (!val) return;
+
+    try {
+      const resp = await fetch("/fx/api/device/plug_rename", {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "Authorization": `Bearer ${authToken}`},
+        body: JSON.stringify({mac, plug_index: plugIdx, name: val})
+      });
+      const data = await resp.json();
+      if (data.success) {
+        closeRenameModal();
+        showToast(`孔位 ${plugIdx + 1} 名称已修改为「${val}」`);
+        renderedMacsKey = "";
+        await loadDiscoveryData(false);
+      } else {
+        alert("保存失败: " + data.error);
+      }
+    } catch (e) {
+      alert("网络错误: " + e.message);
+    }
+  }
+
+  // ========================================================
+  // HARDWARE TIMER MODAL
+  // ========================================================
+  function openTimerModal(mac, plugIdx, plugName, e) {
+    if (e) e.stopPropagation();
+    currentTimerCtx = {mac, plugIdx};
+    document.getElementById("timer-modal-title").innerHTML = `<span>⏰</span><span>孔位 ${plugIdx + 1} (${escapeHtml(plugName)}) 硬件定时</span>`;
+
+    fetch("/fx/api/device/timer", {
+      method: "POST",
+      headers: {"Content-Type": "application/json", "Authorization": `Bearer ${authToken}`},
+      body: JSON.stringify({mac, action: "query", plug_index: plugIdx})
+    });
+
+    updateTimerDisplay();
+    document.getElementById("plug-timer-modal").classList.remove("hidden");
+  }
+
+  function closePlugTimerModal() {
+    document.getElementById("plug-timer-modal").classList.add("hidden");
+    currentTimerCtx = null;
+  }
+
+  function onTimerSlotChange() {
+    updateTimerDisplay();
+  }
+
+  function updateTimerDisplay() {
+    if (!currentTimerCtx) return;
+    const {mac, plugIdx} = currentTimerCtx;
+    const slot = document.getElementById("timer-slot").value;
+    const dev = boundDevicesData.find(d => d.mac === mac);
+    const settings = (dev && dev.state && dev.state.timer_settings && dev.state.timer_settings[`plug_${plugIdx}`]) || {};
+    const task = settings[slot];
+
+    const badge = document.getElementById("timer-status-badge");
+    const info = document.getElementById("timer-current-info");
+
+    if (task && (task.on === 1 || task.on === true)) {
+      badge.textContent = "运行中";
+      badge.className = "pill ok";
+      const hStr = String(task.hour).padStart(2, '0');
+      const mStr = String(task.minute).padStart(2, '0');
+      const actStr = task.action === 1 ? "🟢 接通开启" : "🔴 切断关闭";
+      const repStr = task.repeat === 127 ? "每天重复" : (task.repeat === 31 ? "工作日" : (task.repeat === 96 ? "周末" : (task.repeat === 0 ? "仅一次" : `掩码(${task.repeat})`)));
+      info.textContent = `[${slot}] ${hStr}:${mStr} ${actStr} · ${repStr}`;
+
+      document.getElementById("timer-time").value = `${hStr}:${mStr}`;
+      document.getElementById("timer-action").value = String(task.action);
+      if ([127, 31, 96, 0].includes(task.repeat)) {
+        document.getElementById("timer-repeat").value = String(task.repeat);
+      }
+    } else {
+      badge.textContent = "无计划";
+      badge.className = "pill warn";
+      info.textContent = `该插孔在 [${slot}] 暂无生效的硬件定时任务`;
+    }
+  }
+
+  async function savePlugTimer() {
+    if (!currentTimerCtx) return;
+    const {mac, plugIdx} = currentTimerCtx;
+    const slot = document.getElementById("timer-slot").value;
+    const act = parseInt(document.getElementById("timer-action").value, 10);
+    const rep = parseInt(document.getElementById("timer-repeat").value, 10);
+    const timeVal = document.getElementById("timer-time").value;
+    if (!timeVal || !timeVal.includes(':')) {
+      alert("请选择有效的时间");
+      return;
+    }
+    const [h, m] = timeVal.split(':').map(Number);
+
+    try {
+      const resp = await fetch("/fx/api/device/timer", {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "Authorization": `Bearer ${authToken}`},
+        body: JSON.stringify({
+          mac,
+          action: "set",
+          plug_index: plugIdx,
+          slot,
+          hour: h,
+          minute: m,
+          repeat: rep,
+          timer_action: act
+        })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        showToast("🚀 硬件定时任务已成功下发至排插！");
+        closePlugTimerModal();
+        loadDiscoveryData(false);
+      } else {
+        alert("下发失败: " + data.error);
+      }
+    } catch (e) {
+      alert("网络错误: " + e.message);
+    }
+  }
+
+  async function clearPlugTimer() {
+    if (!currentTimerCtx) return;
+    const {mac, plugIdx} = currentTimerCtx;
+    const slot = document.getElementById("timer-slot").value;
+    try {
+      const resp = await fetch("/fx/api/device/timer", {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "Authorization": `Bearer ${authToken}`},
+        body: JSON.stringify({mac, action: "clear", plug_index: plugIdx, slot})
+      });
+      const data = await resp.json();
+      if (data.success) {
+        showToast("已清除该槽位定时！");
+        closePlugTimerModal();
+        loadDiscoveryData(false);
+      }
+    } catch (e) {}
+  }
+
+  // ========================================================
+  // DEDICATED FULL-PAGE ADMIN VIEW (FOR FLEET GOVERNANCE)
+  // ========================================================
+  let currentAdminSubTab = "users";
+
+  function switchAdminSubTab(tab) {
+    currentAdminSubTab = tab;
+    document.getElementById("subtab-btn-users").classList.toggle("active", tab === "users");
+    document.getElementById("subtab-btn-devices").classList.toggle("active", tab === "devices");
+    document.getElementById("subtab-btn-settings").classList.toggle("active", tab === "settings");
+
+    document.getElementById("admin-panel-users").classList.toggle("hidden", tab !== "users");
+    document.getElementById("admin-panel-devices").classList.toggle("hidden", tab !== "devices");
+    document.getElementById("admin-panel-settings").classList.toggle("hidden", tab !== "settings");
+
+    if (tab === "users") loadAdminUsersPage(adminUsersPage);
+    else if (tab === "devices") loadAdminDevicesPage(adminDevicesPage);
+    else if (tab === "settings") loadAdminSettings();
+  }
+
+  async function initAdminView() {
+    loadAdminOverview();
+    switchAdminSubTab(currentAdminSubTab);
+  }
+
+  async function loadAdminOverview() {
+    try {
+      const resp = await fetch("/fx/api/admin/overview", {
+        headers: {"Authorization": `Bearer ${authToken}`}
+      });
+      const data = await resp.json();
+      if (data.success && data.stats) {
+        const s = data.stats;
+        document.getElementById("stat-total-users").textContent = s.total_users;
+        document.getElementById("stat-active-users").textContent = s.active_users;
+        document.getElementById("stat-disabled-users").textContent = s.disabled_users;
+        document.getElementById("stat-total-devices").textContent = s.total_devices;
+        document.getElementById("stat-bound-devices").textContent = s.bound_devices;
+        document.getElementById("stat-unbound-devices").textContent = s.unbound_devices;
+        document.getElementById("stat-online-clients").textContent = s.live_mqtt_clients;
+        document.getElementById("stat-today-regs").textContent = s.today_registrations;
+      }
+    } catch (e) {}
+  }
+
+  // 1. Paginated Users
+  async function loadAdminUsersPage(page = 1) {
+    adminUsersPage = page;
+    const search = document.getElementById("admin-user-search").value.trim();
+    const status = document.getElementById("admin-user-filter-status").value;
+
+    try {
+      const url = `/fx/api/admin/users?page=${page}&page_size=10&search=${encodeURIComponent(search)}&status=${status}`;
+      const resp = await fetch(url, {headers: {"Authorization": `Bearer ${authToken}`}});
+      const data = await resp.json();
+      if (!data.success) return;
+
+      document.getElementById("admin-user-total").textContent = data.total;
+      const tbody = document.getElementById("admin-users-tbody");
+      tbody.innerHTML = "";
+
+      if (data.users.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px; color:var(--muted);">无符合条件的用户</td></tr>`;
+        renderPagination("admin-users-pagination", data.total, 10, page, "loadAdminUsersPage");
+        return;
+      }
+
+      data.users.forEach(u => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><b>${u.id}</b></td>
+          <td>
+            <b style="cursor:pointer; color:var(--green); text-decoration:underline; text-decoration-style:dashed;" title="点击查看名下设备" onclick="openUserDevicesModal(${u.id}, '${escapeHtml(u.username)}')">
+              ${escapeHtml(u.username)}
+            </b>
+          </td>
+          <td><span class="pill ${u.role === 'admin' ? 'warn' : 'info'}">${u.role}</span></td>
+          <td><span style="font-family:monospace">${u.registered_ip || '--'}</span></td>
+          <td>
+            <button class="btn btn-secondary btn-small" style="font-weight:700; padding:2px 8px; display:inline-flex; align-items:center; gap:5px; font-size:11px;" title="点击查看该用户所有设备详情" onclick="openUserDevicesModal(${u.id}, '${escapeHtml(u.username)}')">
+              <span>📱</span>
+              <span>${u.device_count} 台设备</span>
+              <span style="opacity:0.6; font-size:10px;">🔍</span>
+            </button>
+          </td>
+          <td>
+            <span class="pill ${u.status === 'active' ? 'ok' : 'err'}">${u.status === 'active' ? '正常' : '已禁用'}</span>
+          </td>
+          <td style="color:var(--muted); font-size:11px;">${u.created_at || '--'}</td>
+          <td>
+            <div style="display:flex; gap:4px;">
+              <button class="btn btn-secondary btn-small" onclick="toggleUserStatus(${u.id}, '${u.status === 'active' ? 'disabled' : 'active'}')">${u.status === 'active' ? '禁用' : '解禁'}</button>
+              <button class="btn btn-secondary btn-small" onclick="adminResetPwd(${u.id})">重置密码</button>
+              <button class="btn btn-secondary btn-small" style="color:var(--red)" onclick="adminDeleteUser(${u.id})">删除</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      renderPagination("admin-users-pagination", data.total, 10, page, "loadAdminUsersPage");
+    } catch (e) {
+      console.warn("Users load error:", e);
+    }
+  }
+
+  async function toggleUserStatus(uid, status) {
+    await fetch("/fx/api/admin/user/status", {
+      method: "POST",
+      headers: {"Content-Type": "application/json", "Authorization": `Bearer ${authToken}`},
+      body: JSON.stringify({user_id: uid, status})
+    });
+    showToast(`用户状态已更改为 ${status === 'active' ? '正常' : '禁用'}`);
+    loadAdminUsersPage(adminUsersPage);
+    loadAdminOverview();
+  }
+
+  async function adminResetPwd(uid) {
+    const p = prompt("请输入新密码 (至少6位):");
+    if (p && p.length >= 6) {
+      await fetch("/fx/api/admin/user/reset_pwd", {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "Authorization": `Bearer ${authToken}`},
+        body: JSON.stringify({user_id: uid, new_password: p})
+      });
+      showToast("密码已成功重置");
+    }
+  }
+
+  async function adminDeleteUser(uid) {
+    if (confirm("确定要删除该用户吗？其名下绑定的设备将被退回未绑定池。")) {
+      await fetch("/fx/api/admin/user/delete", {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "Authorization": `Bearer ${authToken}`},
+        body: JSON.stringify({user_id: uid})
+      });
+      showToast("用户已删除");
+      loadAdminUsersPage(adminUsersPage);
+      loadAdminOverview();
+    }
+  }
+
+  // ========================================================
+  // DEVICE RECENT MQTT LOGS MODAL & CONTROLS
+  // ========================================================
+  let currentMqttLogsMac = null;
+  let currentMqttLogsName = null;
+  let currentMqttLogsData = [];
+
+  async function openDeviceMqttModal(mac, name) {
+    mac = (mac || "").trim().toLowerCase();
+    currentMqttLogsMac = mac;
+    currentMqttLogsName = name || mac;
+
+    document.getElementById("device-mqtt-modal-title").innerHTML = `<span>📡</span><span>近期 MQTT 通信报文 · [${escapeHtml(currentMqttLogsName)}]</span>`;
+    document.getElementById("device-mqtt-modal-sub").textContent = `设备 MAC: ${mac.toUpperCase()} · 正在拉取通信记录...`;
+
+    const contentBox = document.getElementById("device-mqtt-logs-content");
+    contentBox.innerHTML = `<div style="text-align:center; padding:30px; color:var(--muted);">正在从服务器获取最近报文...</div>`;
+
+    document.getElementById("device-mqtt-logs-modal").classList.remove("hidden");
+    await loadDeviceMqttLogs(mac);
+  }
+
+  async function loadDeviceMqttLogs(mac) {
+    const contentBox = document.getElementById("device-mqtt-logs-content");
+    try {
+      const resp = await fetch(`/fx/api/device/mqtt_logs?mac=${encodeURIComponent(mac)}`, {
+        headers: { "Authorization": `Bearer ${authToken}` }
+      });
+      const data = await resp.json();
+      if (!data.success) {
+        contentBox.innerHTML = `<div class="auth-error">加载报文失败: ${escapeHtml(data.error || '未知错误')}</div>`;
+        return;
+      }
+
+      currentMqttLogsData = data.logs || [];
+      document.getElementById("device-mqtt-modal-sub").textContent = `设备 MAC: ${mac.toUpperCase()} · 已捕获 ${currentMqttLogsData.length} 条最近通信报文（最新排在最前）`;
+
+      if (currentMqttLogsData.length === 0) {
+        contentBox.innerHTML = `
+          <div style="text-align:center; padding:40px 20px; color:var(--muted); background:#faf8f2; border:1px dashed var(--line); border-radius:12px;">
+            <div style="font-size:32px; margin-bottom:8px;">📭</div>
+            <div style="font-weight:700; color:var(--ink);">暂未捕获到该设备的 MQTT 通信报文</div>
+            <div style="font-size:12px; margin-top:4px;">设备上线、上报状态或接收控制指令后，系统将自动保留最新 30 条交互记录。</div>
+          </div>
+        `;
+        return;
+      }
+
+      contentBox.innerHTML = currentMqttLogsData.map((item, idx) => {
+        const isRx = item.direction === "rx";
+        const prettyJson = typeof item.payload === "object" ? JSON.stringify(item.payload, null, 2) : String(item.payload);
+        return `
+          <div style="background:${isRx ? '#f4f8f3' : '#edf4f9'}; border:1px solid ${isRx ? '#cce2d3' : '#c3d9ea'}; border-radius:10px; padding:10px; font-size:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:6px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="pill ${isRx ? 'ok' : 'info'}" style="font-size:11px; font-weight:800; padding:2px 8px;">
+                  ${isRx ? '📥 RX 上报' : '📤 TX 下发'}
+                </span>
+                <span style="font-family:monospace; font-weight:700; color:var(--ink);">${escapeHtml(formatLogTime(item.time, item.timestamp))}</span>
+                <code style="background:rgba(255,255,255,0.8); padding:1px 6px; border-radius:4px; font-size:11px; font-weight:700; color:${isRx ? 'var(--green-2)' : '#1c5986'}; border:1px solid rgba(0,0,0,0.06);">
+                  ${escapeHtml(item.topic)}
+                </code>
+              </div>
+              <button class="btn btn-secondary btn-small" style="font-size:10px; padding:1px 6px;" onclick="copyMqttPayloadText(${idx})">📋 复制报文</button>
+            </div>
+            <pre style="margin:0; background:white; border:1px solid ${isRx ? '#e0ede4' : '#d5e3ed'}; border-radius:6px; padding:8px; font-family:Consolas, Monaco, monospace; font-size:11px; line-height:1.4; color:var(--ink); overflow-x:auto; max-height:180px;">${escapeHtml(prettyJson)}</pre>
+          </div>
+        `;
+      }).join('');
+
+    } catch (e) {
+      contentBox.innerHTML = `<div class="auth-error">网络错误: ${escapeHtml(e.message)}</div>`;
+    }
+  }
+
+  function refreshCurrentDeviceMqttLogs() {
+    if (currentMqttLogsMac) {
+      loadDeviceMqttLogs(currentMqttLogsMac);
+      showToast("报文已刷新");
+    }
+  }
+
+  function copyMqttPayloadText(index) {
+    if (!currentMqttLogsData || !currentMqttLogsData[index]) return;
+    const item = currentMqttLogsData[index];
+    const text = typeof item.payload === "object" ? JSON.stringify(item.payload, null, 2) : String(item.payload);
+    navigator.clipboard.writeText(text).then(() => {
+      showToast("报文 Payload 已复制至剪贴板");
+    }).catch(() => {
+      showToast("复制失败，请手动选择复制", "⚠️");
+    });
+  }
+
+  function copyAllDeviceMqttLogs() {
+    if (!currentMqttLogsData || currentMqttLogsData.length === 0) {
+      showToast("当前暂无报文可复制", "⚠️");
+      return;
+    }
+    const fullText = JSON.stringify(currentMqttLogsData, null, 2);
+    navigator.clipboard.writeText(fullText).then(() => {
+      showToast(`已复制全部 ${currentMqttLogsData.length} 条报文记录`);
+    }).catch(() => {
+      showToast("复制失败，请手动选择复制", "⚠️");
+    });
+  }
+
+  function closeDeviceMqttModal() {
+    document.getElementById("device-mqtt-logs-modal").classList.add("hidden");
+    currentMqttLogsMac = null;
+    currentMqttLogsName = null;
+    currentMqttLogsData = [];
+  }
+
+  // ========================================================
+  // ADMIN USER DEVICES INSPECTION MODAL (STREAMLINED LIST)
+  // ========================================================
+  let currentUserDevicesModalUser = null;
+
+  async function openUserDevicesModal(userId, username) {
+    currentUserDevicesModalUser = { id: userId, username };
+    document.getElementById("user-devices-modal-title").innerHTML = `<span>📱</span><span>用户 [${escapeHtml(username)}] 的名下设备</span>`;
+    document.getElementById("user-devices-modal-sub").textContent = `正在查询用户 ID: ${userId} 的名下设备列表与 MQTT 状态...`;
+
+    const contentBox = document.getElementById("user-devices-content");
+    contentBox.innerHTML = `<div style="text-align:center; padding:30px; color:var(--muted);">正在载入设备数据...</div>`;
+
+    document.getElementById("user-devices-modal").classList.remove("hidden");
+
+    try {
+      const resp = await fetch(`/fx/api/admin/user/devices?user_id=${userId}`, {
+        headers: { "Authorization": `Bearer ${authToken}` }
+      });
+      const data = await resp.json();
+      if (!data.success) {
+        contentBox.innerHTML = `<div class="auth-error">加载失败: ${escapeHtml(data.error || '未知错误')}</div>`;
+        return;
+      }
+
+      const devices = data.devices || [];
+      const stats = data.stats || { total_devices: devices.length, online_devices: devices.filter(d => d.is_online).length, offline_devices: devices.filter(d => !d.is_online).length };
+      document.getElementById("user-devices-modal-sub").innerHTML = `
+        名下共 <b>${stats.total_devices}</b> 台设备 &nbsp;·&nbsp;
+        <span style="color:var(--green-2); font-weight:700;">🟢 在线 ${stats.online_devices} 台</span> &nbsp;·&nbsp;
+        <span style="color:${stats.offline_devices > 0 ? 'var(--red)' : 'var(--muted)'};">🔴 离线 ${stats.offline_devices} 台</span>
+      `;
+
+      if (devices.length === 0) {
+        contentBox.innerHTML = `
+          <div style="text-align:center; padding:40px 20px; color:var(--muted); background:#faf8f2; border:1px dashed var(--line); border-radius:14px;">
+            <div style="font-size:32px; margin-bottom:8px;">📭</div>
+            <div style="font-weight:700; color:var(--ink);">该用户名下暂无任何绑定设备</div>
+            <div style="font-size:12px; margin-top:4px;">设备可通过用户前台认领或在设备管理中指派给此用户。</div>
+          </div>
+        `;
+        return;
+      }
+
+      contentBox.innerHTML = devices.map(dev => {
+        const isM1 = dev.device_type === "zm1";
+        const latest = dev.latest_mqtt;
+        let latestSummary = "暂无 MQTT 收发记录";
+        if (latest) {
+          const dirTag = latest.direction === "rx" ? "📥 上报" : "📤 下发";
+          const pStr = typeof latest.payload === "object" ? JSON.stringify(latest.payload) : String(latest.payload);
+          const shortP = pStr.length > 70 ? pStr.substr(0, 70) + "…" : pStr;
+          const formattedT = formatLogTime(latest.time, latest.timestamp);
+          const timePart = formattedT.split(' ')[1] || formattedT;
+          latestSummary = `<b>${dirTag}</b> <span style="color:var(--muted)">[${escapeHtml(timePart)}]</span> <code style="color:var(--green-2)">${escapeHtml(latest.topic)}</code>: <span style="color:var(--ink);">${escapeHtml(shortP)}</span>`;
+        }
+
+        return `
+          <div style="background:#fffdf6; border:1px solid var(--line); border-radius:12px; padding:12px 14px; box-shadow:0 1px 4px rgba(0,0,0,0.03); display:flex; flex-direction:column; gap:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px;">
+              <div>
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <span style="font-size:16px;">${isM1 ? '🍃' : '🔌'}</span>
+                  <b style="font-size:14px; color:var(--ink);">${escapeHtml(dev.custom_name || dev.name)}</b>
+                  <span class="pill info" style="font-size:10px;">${dev.device_type.toUpperCase()}</span>
+                  <span class="pill ${dev.is_online ? 'ok' : 'err'}" style="font-size:10px;">${dev.is_online ? '在线' : '离线'}</span>
+                </div>
+                <div style="font-size:11px; font-family:monospace; color:var(--muted); margin-top:3px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                  <span>MAC: <b style="color:var(--ink)">${dev.mac.toUpperCase()}</b></span>
+                  <span>IP: <code style="font-family:monospace; background:#eef7f2; padding:1px 6px; border-radius:4px; border:1px solid #c8e4d2; color:var(--green-2); font-weight:700;">${dev.last_seen_ip || '--'}</code></span>
+                  <span>心跳: ${dev.last_heartbeat_ago !== null ? formatHeartbeat(dev.last_heartbeat_ago) : '--'}</span>
+                  <span>绑定时间: ${dev.bound_at || '--'}</span>
+                </div>
+              </div>
+
+              <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
+                <button class="btn btn-green btn-small" style="padding:2px 8px; font-size:11px; font-weight:700;" onclick="openDeviceMqttModal('${dev.mac}', '${escapeHtml(dev.custom_name || dev.name)}')">
+                  📡 近期报文 (${dev.mqtt_log_count || 0})
+                </button>
+                <button class="btn btn-secondary btn-small" style="padding:2px 6px; font-size:11px;" title="远程重启设备" onclick="rebootDevice('${dev.mac}', '${escapeHtml(dev.custom_name || dev.name)}')">🔄 重启</button>
+                <button class="btn btn-secondary btn-small" onclick="openDeviceRenameModal('${dev.mac}', '${escapeHtml(dev.custom_name || dev.name)}')">重命名</button>
+                <button class="btn btn-secondary btn-small" onclick="openTransferModal('${dev.mac}', '${escapeHtml(username)}', () => { if(currentUserDevicesModalUser) openUserDevicesModal(currentUserDevicesModalUser.id, currentUserDevicesModalUser.username); loadAdminDevicesPage(adminDevicesPage); loadAdminOverview(); });">转让</button>
+                <button class="btn btn-secondary btn-small" style="color:var(--red)" onclick="openUnbindModal('${dev.mac}', '${escapeHtml(dev.custom_name || dev.name)}', true, () => { if(currentUserDevicesModalUser) openUserDevicesModal(currentUserDevicesModalUser.id, currentUserDevicesModalUser.username); loadAdminDevicesPage(adminDevicesPage); loadAdminOverview(); });">解绑</button>
+              </div>
+            </div>
+
+            <!-- Recent MQTT Snippet -->
+            <div style="background:#f5f2e6; border-radius:7px; padding:6px 10px; font-size:11px; display:flex; justify-content:space-between; align-items:center; gap:8px; overflow:hidden;">
+              <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;">
+                <span style="font-weight:700; color:var(--soil); margin-right:4px;">最新报文:</span>
+                ${latestSummary}
+              </div>
+              <button class="btn btn-secondary btn-small" style="font-size:10px; padding:1px 6px; flex-shrink:0;" onclick="openDeviceMqttModal('${dev.mac}', '${escapeHtml(dev.custom_name || dev.name)}')">
+                查看历史 ❯
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+    } catch (e) {
+      contentBox.innerHTML = `<div class="auth-error">网络错误: ${escapeHtml(e.message)}</div>`;
+    }
+  }
+
+  function closeUserDevicesModal() {
+    document.getElementById("user-devices-modal").classList.add("hidden");
+    currentUserDevicesModalUser = null;
+  }
+
+  function jumpToFilterUserDevices() {
+    if (!currentUserDevicesModalUser) return;
+    const username = currentUserDevicesModalUser.username;
+    closeUserDevicesModal();
+    switchAdminSubTab("devices");
+    document.getElementById("admin-device-search").value = username;
+    loadAdminDevicesPage(1);
+  }
+
+  // 2. Paginated Devices Fleet
+  async function loadAdminDevicesPage(page = 1) {
+    adminDevicesPage = page;
+    const search = document.getElementById("admin-device-search").value.trim();
+    const dtype = document.getElementById("admin-device-filter-type").value;
+    const bound = document.getElementById("admin-device-filter-bound").value;
+
+    try {
+      const url = `/fx/api/admin/devices?page=${page}&page_size=10&search=${encodeURIComponent(search)}&type=${dtype}&bound=${bound}`;
+      const resp = await fetch(url, {headers: {"Authorization": `Bearer ${authToken}`}});
+      const data = await resp.json();
+      if (!data.success) return;
+
+      document.getElementById("admin-device-total").textContent = data.total;
+      const tbody = document.getElementById("admin-devices-tbody");
+      tbody.innerHTML = "";
+
+      if (data.devices.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px; color:var(--muted);">无符合条件的设备</td></tr>`;
+        renderPagination("admin-devices-pagination", data.total, 10, page, "loadAdminDevicesPage");
+        return;
+      }
+
+      data.devices.forEach(dev => {
+        const tr = document.createElement("tr");
+        const ipDisp = dev.last_seen_ip || dev.ip || "--";
+        tr.innerHTML = `
+          <td><b style="font-family:monospace">${dev.mac.toUpperCase()}</b></td>
+          <td><span class="pill info">${dev.device_type.toUpperCase()}</span></td>
+          <td>
+            <div style="display:flex; align-items:center; gap:4px;">
+              <span>${escapeHtml(dev.custom_name || '--')}</span>
+              <button class="btn btn-secondary btn-small" style="padding:1px 4px; font-size:10px;" title="修改名称" onclick="openDeviceRenameModal('${dev.mac}', '${escapeHtml(dev.custom_name || '')}')">✏️</button>
+            </div>
+          </td>
+          <td>
+            <span style="font-family:monospace; font-size:11px; background:${dev.is_online ? '#eef7f2' : '#f5f5f5'}; padding:2px 6px; border-radius:5px; border:1px solid ${dev.is_online ? '#c8e4d2' : '#ddd'}; color:${dev.is_online ? 'var(--green-2)' : 'var(--muted)'}; font-weight:700;">
+              ${escapeHtml(ipDisp)}
+            </span>
+          </td>
+          <td>
+            ${dev.bound_username ? `<span class="pill ok">👤 ${escapeHtml(dev.bound_username)}</span>` : '<span style="color:var(--muted)">未绑定 (空闲)</span>'}
+          </td>
+          <td>
+            <span class="pill ${dev.is_online ? 'ok' : 'err'}">${dev.is_online ? '在线' : '离线'}</span>
+          </td>
+          <td style="color:var(--muted); font-size:11px;">
+            ${dev.last_heartbeat_ago !== null ? formatHeartbeat(dev.last_heartbeat_ago) : '--'}
+          </td>
+          <td>
+            <div style="display:flex; gap:4px; flex-wrap:wrap;">
+              <button class="btn btn-secondary btn-small" title="查看设备近期 MQTT 报文" onclick="openDeviceMqttModal('${dev.mac}', '${escapeHtml(dev.custom_name || dev.mac)}')">📡 报文</button>
+              <button class="btn btn-secondary btn-small" title="远程重启设备" onclick="rebootDevice('${dev.mac}', '${escapeHtml(dev.custom_name || dev.mac)}')">🔄 重启</button>
+              ${dev.bound_username ? `
+                <button class="btn btn-secondary btn-small" style="color:var(--red)" onclick="openUnbindModal('${dev.mac}', '${escapeHtml(dev.custom_name || dev.mac)}', true, () => { loadAdminDevicesPage(adminDevicesPage); loadAdminOverview(); })">强制解绑</button>
+                <button class="btn btn-secondary btn-small" onclick="openTransferModal('${dev.mac}', '${escapeHtml(dev.bound_username)}', () => { loadAdminDevicesPage(adminDevicesPage); loadAdminOverview(); })">转让过户</button>
+              ` : `
+                <button class="btn btn-secondary btn-small" onclick="openTransferModal('${dev.mac}', '', () => { loadAdminDevicesPage(adminDevicesPage); loadAdminOverview(); })">指派用户</button>
+              `}
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      renderPagination("admin-devices-pagination", data.total, 10, page, "loadAdminDevicesPage");
+    } catch (e) {
+      console.warn("Devices load error:", e);
+    }
+  }
+
+  function adminUnbind(mac, name = "") {
+    openUnbindModal(mac, name || mac, true, () => {
+      loadAdminDevicesPage(adminDevicesPage);
+      loadAdminOverview();
+    });
+  }
+
+  function adminTransferPrompt(mac, currentOwner = "") {
+    openTransferModal(mac, currentOwner, () => {
+      loadAdminDevicesPage(adminDevicesPage);
+      loadAdminOverview();
+    });
+  }
+
+  // 3. Security & MQTT Settings
+  async function loadAdminSettings() {
+    try {
+      const resp = await fetch("/fx/api/admin/settings", {headers: {"Authorization": `Bearer ${authToken}`}});
+      const data = await resp.json();
+      if (data.settings) {
+        document.getElementById("cfg-max-users").value = data.settings.max_users_per_ip || "3";
+        document.getElementById("cfg-allow-reg").value = data.settings.allow_registration || "1";
+        document.getElementById("cfg-mqtt-host").value = data.settings.mqtt_public_host || "";
+        document.getElementById("cfg-mqtt-port").value = data.settings.mqtt_public_port || "1883";
+        document.getElementById("cfg-mqtt-user").value = data.settings.mqtt_user || "";
+        document.getElementById("cfg-mqtt-pass").value = data.settings.mqtt_pass || "";
+      }
+    } catch (e) {}
+  }
+
+  async function saveAdminSettings() {
+    const maxUsers = document.getElementById("cfg-max-users").value;
+    const allowReg = document.getElementById("cfg-allow-reg").value;
+    const mqttHost = document.getElementById("cfg-mqtt-host").value.trim();
+    const mqttPort = document.getElementById("cfg-mqtt-port").value.trim();
+    const mqttUser = document.getElementById("cfg-mqtt-user").value.trim();
+    const mqttPass = document.getElementById("cfg-mqtt-pass").value.trim();
+
+    try {
+      const resp = await fetch("/fx/api/admin/settings", {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "Authorization": `Bearer ${authToken}`},
+        body: JSON.stringify({
+          max_users_per_ip: maxUsers,
+          allow_registration: allowReg,
+          mqtt_public_host: mqttHost,
+          mqtt_public_port: mqttPort,
+          mqtt_user: mqttUser,
+          mqtt_pass: mqttPass
+        })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        showToast("平台策略与 MQTT 参数已更新生效");
+        loadPublicMqttConfig();
+      }
+    } catch (e) {}
+  }
+
+  // --- Public MQTT Guide Config ---
+  let publicMqttConfig = null;
+
+  async function loadPublicMqttConfig() {
+    try {
+      const resp = await fetch("/fx/api/public/config");
+      const data = await resp.json();
+      if (data && data.success && data.mqtt) {
+        publicMqttConfig = data.mqtt;
+      }
+    } catch (e) {
+      console.warn("Failed to load public mqtt config:", e);
+    }
+
+    const currentHost = window.location.hostname || "127.0.0.1";
+    const host = (publicMqttConfig && publicMqttConfig.host) ? publicMqttConfig.host : currentHost;
+    const port = (publicMqttConfig && publicMqttConfig.port) ? publicMqttConfig.port : 1883;
+    const user = (publicMqttConfig && publicMqttConfig.username) ? publicMqttConfig.username : "";
+    const pass = (publicMqttConfig && publicMqttConfig.password) ? publicMqttConfig.password : "";
+
+    const elHost = document.getElementById("guide-mqtt-host");
+    const elPort = document.getElementById("guide-mqtt-port");
+    const elUser = document.getElementById("guide-mqtt-user");
+    const elPass = document.getElementById("guide-mqtt-pass");
+    const btnUser = document.getElementById("btn-copy-mqtt-user");
+    const btnPass = document.getElementById("btn-copy-mqtt-pass");
+
+    if (elHost) {
+      elHost.textContent = host;
+      const hint = document.getElementById("guide-mqtt-host-hint");
+      if (hint) {
+        if (publicMqttConfig && publicMqttConfig.domain_mismatch) {
+          hint.textContent = `(域名 ${publicMqttConfig.configured_host} 解析不符，已自动使用服务器 IP)`;
+          hint.classList.remove("hidden");
+        } else {
+          hint.classList.add("hidden");
+        }
+      }
+    }
+    if (elPort) elPort.textContent = port;
+    if (elUser) {
+      elUser.textContent = user ? user : "无需账号 (允许匿名)";
+      if (btnUser) btnUser.classList.toggle("hidden", !user);
+    }
+    if (elPass) {
+      elPass.textContent = pass ? pass : "无需密码";
+      if (btnPass) btnPass.classList.toggle("hidden", !pass);
+    }
+  }
+
+  function copyMqttField(elemId, toastMsg) {
+    const el = document.getElementById(elemId);
+    if (!el) return;
+    const val = el.textContent.trim();
+    if (val && !val.startsWith("无需") && val !== "--") {
+      copyText(val, toastMsg);
+    }
+  }
+
+  function copyUdpPayloadSample() {
+    const currentHost = window.location.hostname || "127.0.0.1";
+    const host = (publicMqttConfig && publicMqttConfig.host) ? publicMqttConfig.host : currentHost;
+    const port = (publicMqttConfig && publicMqttConfig.port) ? publicMqttConfig.port : 1883;
+    const user = (publicMqttConfig && publicMqttConfig.username) ? publicMqttConfig.username : "";
+    const pass = (publicMqttConfig && publicMqttConfig.password) ? publicMqttConfig.password : "";
+
+    const sample = {
+      "mac": "您的设备MAC(如d0bae4xxxxxx)",
+      "setting": {
+        "mqtt_uri": host,
+        "mqtt_port": parseInt(port, 10),
+        "mqtt_user": user,
+        "mqtt_password": pass
+      }
+    };
+    copyText(JSON.stringify(sample, null, 2), "设备 UDP 配置 JSON 已复制到剪贴板");
+  }
+
+  function copyText(text, successToast = "已复制到剪贴板") {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(successToast);
+      }).catch(() => {
+        fallbackCopyText(text, successToast);
+      });
+    } else {
+      fallbackCopyText(text, successToast);
+    }
+  }
+
+  function fallbackCopyText(text, successToast) {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand("copy");
+      showToast(successToast);
+    } catch (e) {
+      showToast("复制失败，请手动选择复制", "⚠️");
+    }
+    document.body.removeChild(ta);
+  }
+
+  // Helper Pagination Renderer
+  function renderPagination(containerId, total, pageSize, currentPage, callbackFnName) {
+    const box = document.getElementById(containerId);
+    if (!box) return;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+    box.innerHTML = `
+      <div>第 ${currentPage} / ${totalPages} 页 (共 ${total} 条)</div>
+      <div style="display:flex; gap:6px;">
+        <button class="btn btn-secondary btn-small" ${currentPage <= 1 ? 'disabled' : ''} onclick="${callbackFnName}(${currentPage - 1})">上一页</button>
+        <button class="btn btn-secondary btn-small" ${currentPage >= totalPages ? 'disabled' : ''} onclick="${callbackFnName}(${currentPage + 1})">下一页</button>
+      </div>
+    `;
+  }
+
+  function escapeHtml(str) {
+    return String(str || '')
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  // Page Initialization
+  window.addEventListener("DOMContentLoaded", () => {
+    initQuickTags();
+    loadPublicMqttConfig();
+    checkSession();
+  });
+</script>
+
+</body>
+</html>
